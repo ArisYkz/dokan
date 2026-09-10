@@ -15,6 +15,7 @@ const createOrderSchema = z.object({
   items: z.array(z.object({
     productId: z.string().uuid(),
     quantity: z.number().int().min(1).max(50),
+    selectedVariants: z.record(z.string(), z.string()).optional(),
   })).min(1).max(100),
   promoCode: z.string().optional(),
   discountAmount: z.number().int().min(0).optional(),
@@ -66,6 +67,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fetch variant price adjustments for the ordered products so we price variants correctly
+    const { data: variants, error: vErr } = await supabase
+      .from("product_variants")
+      .select("product_id, variant_type, variant_value, price_adjustment")
+      .in("product_id", productIds);
+
+    if (vErr) {
+      console.error("Variant fetch error:", vErr.message);
+    }
+
     let totalPrice = 0;
     const orderItemsPayload: { product_id: string; product_name: string; product_price: number; quantity: number }[] = [];
 
@@ -83,11 +94,22 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      totalPrice += product.price * item.quantity;
+
+      // Unit price = base price + sum of selected variants' price adjustments
+      let unitPrice = Number(product.price) || 0;
+      const selectedVariants = item.selectedVariants || {};
+      for (const [type, value] of Object.entries(selectedVariants)) {
+        const variant = (variants || []).find((v: any) =>
+          v.product_id === product.id && v.variant_type === type && v.variant_value === value,
+        );
+        if (variant) unitPrice += Number(variant.price_adjustment) || 0;
+      }
+
+      totalPrice += unitPrice * item.quantity;
       orderItemsPayload.push({
         product_id: product.id,
         product_name: product.name,
-        product_price: product.price,
+        product_price: unitPrice,
         quantity: item.quantity,
       });
     }
@@ -255,6 +277,15 @@ Deno.serve(async (req) => {
       orderItemsPayload.map(item => ({ order_id: order.id, ...item }))
     );
     if (itemsErr) console.error("Order items insert error:", JSON.stringify(itemsErr));
+
+    // Store the full customer phone in order_contacts (RLS-protected) so the seller
+    // can reach the customer. The masked value above stays on orders for privacy.
+    const { error: contactErr } = await supabase.from("order_contacts").insert({
+      order_id: order.id,
+      store_id: store.id,
+      customer_phone: input.customerPhone,
+    });
+    if (contactErr) console.error("Order contact insert error:", JSON.stringify(contactErr));
 
     // Increment promo usage if applicable
     if (input.promoCode) {

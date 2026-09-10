@@ -15,6 +15,7 @@ export const useOrdersQuery = (storeId: string | undefined, pageSize: number = 2
       const orders = await fetchStoreOrdersWithContacts(storeId!, offset, pageSize);
       return orders.map((row: any) => ({
         ...row,
+        customer_phone: row.order_contacts?.[0]?.customer_phone || row.customer_phone,
         public_order_id: row.public_order_id || row.id,
       })) as OrderRow[];
     },

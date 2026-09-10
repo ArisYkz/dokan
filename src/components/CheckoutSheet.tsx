@@ -91,7 +91,7 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
         });
     }, [storeId]);
 
-    const subtotal = useMemo(() => cart.reduce((s, i) => s + i.product.price * i.quantity, 0), [cart]);
+    const subtotal = useMemo(() => cart.reduce((s, i) => s + (i.product.price + (i.variantPriceAdjustment || 0)) * i.quantity, 0), [cart]);
     const totalQuantity = useMemo(() => cart.reduce((s, i) => s + i.quantity, 0), [cart]);
 
     const discountAmount = useMemo(() => {
@@ -215,7 +215,7 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
           // COD / contact-us: order lands "confirmed" server-side; no payment step
           if (clearCart) clearCart();
           if (onOrderComplete) {
-            onOrderComplete(order.order_id);
+            onOrderComplete(result.order_id);
           } else {
             setStep("done");
           }

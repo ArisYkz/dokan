@@ -30,11 +30,17 @@ vi.mock("@/integrations/supabase/client", () => {
     c.select = vi.fn(() => c);
     c.eq = vi.fn(() => c);
     c.not = vi.fn(() => c);
+    c.neq = vi.fn(() => c);
     c.order = vi.fn(() => c);
     c.range = vi.fn(() => c);
     c.in = vi.fn(() => c);
     c.or = vi.fn(() => c);
-    c.maybeSingle = vi.fn(() => thenable());
+    // maybeSingle is only used by ensureUniqueProductSlug — always resolve "no match"
+    // so the uniqueness loop terminates instead of infinitely appending suffixes.
+    c.maybeSingle = vi.fn(() => ({
+      then: (onfulfilled: any) =>
+        Promise.resolve({ data: null, error: null }).then(onfulfilled),
+    }));
     c.single = vi.fn(() => thenable());
     c.then = thenable().then.bind(thenable());
     // insert needs to support .select("id") chaining

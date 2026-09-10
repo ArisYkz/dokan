@@ -110,6 +110,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedVariants?: Record<string, string>;
+  variantPriceAdjustment?: number;
 }
 
 export interface BrandFormState {

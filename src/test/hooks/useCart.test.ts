@@ -172,7 +172,7 @@ describe("useCart", () => {
       expect(result.current.cart[0].quantity).toBe(2);
     });
 
-    it("clamps minimum quantity to 1", () => {
+    it("removes the item when quantity reaches 0", () => {
       const { result } = renderHook(() => useCart());
 
       act(() => {
@@ -182,7 +182,7 @@ describe("useCart", () => {
         result.current.updateQuantity("prod-1", -100);
       });
 
-      expect(result.current.cart[0].quantity).toBe(1);
+      expect(result.current.cart).toHaveLength(0);
     });
 
     it("clamps maximum quantity to stock", () => {
