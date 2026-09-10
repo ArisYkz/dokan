@@ -464,6 +464,36 @@ const BrandingTab = ({
             </PlatformRow>
           </SectionCard>
 
+          {/* ── Card: Telegram Notifications ── */}
+          <SectionCard>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Bell className="w-3.5 h-3.5 text-muted-foreground/50" />
+                <span className="text-xs md:text-sm font-semibold tracking-[0.2em] uppercase text-foreground opacity-90">{BRANDING.TELEGRAM_HEADER}</span>
+                {isFree && <span className="pro-badge"><Crown className="w-2.5 h-2.5" /> PRO</span>}
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground/50">{BRANDING.TELEGRAM_DESC}</p>
+
+              <div className="rounded-none border border-border/30 bg-muted/10 p-4 space-y-3">
+                <Field label={BRANDING.TELEGRAM_CHAT_ID} icon={<MessageCircle className="w-3.5 h-3.5" />}>
+                  <input
+                    value={isFree ? "" : brandForm.telegram_chat_id}
+                    onChange={isFree ? undefined : (e) => set("telegram_chat_id", e.target.value)}
+                    disabled={isFree}
+                    placeholder={isFree ? BRANDING.TELEGRAM_DISABLED_PLACEHOLDER : "e.g. 123456789"}
+                    className={`${inputClass} font-mono ${isFree ? "cursor-not-allowed text-muted-foreground/40 bg-muted/20" : ""}`}
+                  />
+                </Field>
+                {!isFree && (
+                  <div className="flex items-start gap-2 text-xs md:text-sm text-muted-foreground/50">
+                    <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                    <span dangerouslySetInnerHTML={{ __html: BRANDING.TELEGRAM_HELP }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+
           {/* ── Card: Tax Settings ── */}
           <SectionCard title={BRANDING.TAX_SETTINGS} description={BRANDING.TAX_DESC}>
             <div className="flex items-center justify-between">
@@ -843,39 +873,8 @@ const BrandingTab = ({
             </div>
           </SectionCard>
 
-          {/* ── Card: Notifications ── */}
+          {/* ── Card: Marketing QR ── */}
           <SectionCard>
-            {/* Telegram Notifications — PRO gate */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Bell className="w-3.5 h-3.5 text-muted-foreground/50" />
-                <span className="text-xs md:text-sm font-semibold tracking-[0.2em] uppercase text-foreground opacity-90">{BRANDING.TELEGRAM_HEADER}</span>
-                {isFree && <span className="pro-badge"><Crown className="w-2.5 h-2.5" /> PRO</span>}
-              </div>
-              <p className="text-xs md:text-sm text-muted-foreground/50">{BRANDING.TELEGRAM_DESC}</p>
-
-              <div className="rounded-none border border-border/30 bg-muted/10 p-4 space-y-3">
-                <Field label={BRANDING.TELEGRAM_CHAT_ID} icon={<MessageCircle className="w-3.5 h-3.5" />}>
-                  <input
-                    value={isFree ? "" : brandForm.telegram_chat_id}
-                    onChange={isFree ? undefined : (e) => set("telegram_chat_id", e.target.value)}
-                    disabled={isFree}
-                    placeholder={isFree ? BRANDING.TELEGRAM_DISABLED_PLACEHOLDER : "e.g. 123456789"}
-                    className={`${inputClass} font-mono ${isFree ? "cursor-not-allowed text-muted-foreground/40 bg-muted/20" : ""}`}
-                  />
-                </Field>
-                {!isFree && (
-                  <div className="flex items-start gap-2 text-xs md:text-sm text-muted-foreground/50">
-                    <Info className="w-3 h-3 mt-0.5 shrink-0" />
-                    <span dangerouslySetInnerHTML={{ __html: BRANDING.TELEGRAM_HELP }} />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="border-t border-border/20" />
-
-            {/* Marketing QR Card */}
             <QrMarketingCard
               storeSlug={store.slug}
               storeName={store.name}

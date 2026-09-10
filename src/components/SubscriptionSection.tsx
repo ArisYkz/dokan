@@ -109,7 +109,7 @@ const SubscriptionSection = ({ userId, profile, isPro, onDataChange }: Subscript
         <p className="font-mono text-[10px] text-accent tracking-wider">✓ {promoDiscount}% discount applied</p>
       )}
 
-      <div className="max-w-md mx-auto space-y-6">
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* Free — 3-day trial */}
         <div className="text-left w-full border border-border rounded-none p-3 md:p-6 flex flex-col relative bg-background">
           <div className="mb-3 md:mb-6">
