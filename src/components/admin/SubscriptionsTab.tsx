@@ -7,17 +7,23 @@ import { CheckCircle, XCircle, Loader2, X } from "lucide-react";
 const PLAN_LABELS: Record<string, string> = {
   pro_month: "Pro Monthly",
   pro_year: "Pro Yearly",
+  pro: "Pro",
+  standard: "Pro",
   free: "Free",
 };
 
 const PLAN_PRICES: Record<string, string> = {
   pro_month: "2,000 ৳/mo",
   pro_year: "150,000 ৳/yr",
+  pro: "2,000 ৳/mo",
+  standard: "2,000 ৳/mo",
 };
 
 const PLAN_EXPIRY_DAYS: Record<string, number> = {
   pro_month: 31,
   pro_year: 365,
+  pro: 31,
+  standard: 31,
 };
 
 const SubscriptionsTab = () => {
@@ -64,7 +70,7 @@ const SubscriptionsTab = () => {
             Monthly Revenue
           </p>
           <p className="font-mono text-2xl">
-            {active.filter((p: any) => p.plan_type === "pro_month").length * 2000 +
+            {active.filter((p: any) => ["pro_month", "pro", "standard"].includes(p.plan_type)).length * 2000 +
              active.filter((p: any) => p.plan_type === "pro_year").length * 12500}
             <span className="text-xs text-muted-foreground ml-1">৳</span>
           </p>

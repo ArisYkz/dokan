@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Cropper, { type Area } from "react-easy-crop";
 import { Upload, X, Loader2, Crop } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -169,8 +170,8 @@ const ImageCropUpload = ({
   return (
     <div className={className}>
       {/* Crop modal */}
-      {cropSrc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      {cropSrc && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
           <div className="bg-card border border-border rounded-sm w-full max-w-lg overflow-hidden">
             <div className="relative h-72 md:h-96 bg-muted">
               <Cropper
@@ -200,7 +201,7 @@ const ImageCropUpload = ({
                 <button
                   type="button"
                   onClick={handleCropConfirm}
-                  disabled={uploading || optimizing}
+                  disabled={uploading || optimizing || !croppedArea}
                   className="flex-1 bg-primary text-primary-foreground py-2.5 text-sm tracking-wide uppercase rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {(uploading || optimizing) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crop className="w-4 h-4" />}
@@ -216,7 +217,8 @@ const ImageCropUpload = ({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {value ? (

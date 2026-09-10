@@ -5,8 +5,8 @@ export const fetchStoreBySlug = async (slug: string) => {
     .from("stores")
     .select(`
       id, name, slug, description, user_id,
-      instagram, tiktok_handle, telegram_chat_id, facebook,
-      hero_image_url, hero_title, hero_subtitle,
+      instagram, tiktok_handle, telegram_chat_id, facebook, whatsapp_phone, social_platform,
+      hero_image_url, hero_title, hero_subtitle, logo_url,
       payment_qr_image, is_verified,
       payment_methods, delivery_carriers, payment_phone, payment_name,
       is_paused, total_earned, report_count,

@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
         statusText = error
           ? `⚠️ Error: ${error.message}`
-          : `✅ Approved (${requestedPlan === 'pro_year' ? 'Yearly' : 'Standard'})`;
+          : `✅ Approved (${requestedPlan === 'pro_year' ? 'Yearly' : 'Pro'})`;
       } else if (action === 'reject') {
         statusText = '❌ Rejected';
       } else if (action === 'ban') {
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       return ok({ success: true, message: 'Keys missing, skipped' });
     }
 
-    const planDisplay = plan_type === 'pro_year' ? '🏆 Yearly (legacy)' : '⚡ Standard';
+    const planDisplay = plan_type === 'pro_year' ? '🏆 Yearly (legacy)' : '⚡ Pro';
 
     const caption = `
 🚀 <b>Dokan Pro subscription request</b>

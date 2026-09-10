@@ -33,7 +33,7 @@ const PaymentView = ({ order, total, timeLeft, loading, CHECKOUT, ACTIONS, onIAm
 
     {methodLabel && (
       <div className="flex items-center gap-2">
-        {methodLogo && <img src={methodLogo} alt="" className="w-6 h-6 rounded-sm" />}
+        {methodLogo && <img src={methodLogo} alt="" className="w-6 h-6 rounded-sm object-contain" />}
         <p className="text-xs font-bold uppercase tracking-wider text-foreground">{methodLabel}</p>
       </div>
     )}

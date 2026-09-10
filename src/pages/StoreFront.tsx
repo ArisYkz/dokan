@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Facebook, Instagram, MessageCircle, Loader2 } from "lucide-react";
+import { ShoppingBag, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getThemeStyleVars } from "@/lib/storeThemes";
 import { useTheme } from "@/hooks/useTheme";
@@ -33,12 +33,6 @@ import { useStorefrontStore, useStorefrontProducts } from "@/hooks/queries/useSt
 const ProductDetail = lazy(() => import("@/components/ProductDetail"));
 import CheckoutSheet from "@/components/CheckoutSheet";
 const ReportStoreDrawer = lazy(() => import("@/components/ReportStoreDrawer"));
-
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-  </svg>
-);
 
 type ProductWithCategory = Product & {
   category: string | null;
@@ -161,6 +155,15 @@ const StoreFront = () => {
   const tiktokLink = `https://tiktok.com/@${(store?.tiktok_handle || store?.instagram || "").replace("@", "")}`;
   const telegramLink = `https://t.me/${(store?.telegram_chat_id || "").replace("@", "")}`;
   const facebookLink = `https://m.me/${(store?.facebook || "").replace("@", "")}`;
+  const whatsappLink = store?.whatsapp_phone ? `https://wa.me/${store.whatsapp_phone}` : null;
+
+  const socials = [
+    store?.show_instagram && store?.instagram ? { key: "instagram", href: instagramLink } : null,
+    store?.show_tiktok && store?.tiktok_handle ? { key: "tiktok", href: tiktokLink } : null,
+    store?.show_telegram && store?.telegram_chat_id ? { key: "telegram", href: telegramLink } : null,
+    store?.show_facebook && store?.facebook ? { key: "facebook", href: facebookLink } : null,
+    whatsappLink ? { key: "whatsapp", href: whatsappLink } : null,
+  ].filter(Boolean) as { key: string; href: string }[];
 
   if (loading) {
     return (
@@ -271,28 +274,6 @@ const StoreFront = () => {
             {store.is_verified && (
               <span className="text-xs tracking-[0.15em] uppercase px-2 py-1 rounded-sm" style={{ backgroundColor: "hsl(var(--nav-fg) / 0.12)", color: "hsl(var(--nav-fg) / 0.8)" }}>✓</span>
             )}
-            <div className="flex items-center gap-3">
-              {store.show_instagram && store.instagram && (
-                <a href={instagramLink} target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity">
-                  <Instagram className="w-4 h-4" strokeWidth={1} />
-                </a>
-              )}
-              {store.show_tiktok && store.tiktok_handle && (
-                <a href={tiktokLink} target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity">
-                  <TikTokIcon className="w-4 h-4" />
-                </a>
-              )}
-              {store.show_telegram && store.telegram_chat_id && (
-                <a href={telegramLink} target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity">
-                  <MessageCircle className="w-4 h-4" strokeWidth={1} />
-                </a>
-              )}
-              {store.show_facebook && store.facebook && (
-                <a href={facebookLink} target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity">
-                  <Facebook className="w-4 h-4" strokeWidth={1} />
-                </a>
-              )}
-            </div>
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
@@ -358,7 +339,7 @@ const StoreFront = () => {
       </section>
 
       {/* Footer */}
-      <StoreFooter storeName={store.name} STOREFRONT={STOREFRONT} onReportClick={() => setShowReport(true)} />
+      <StoreFooter storeName={store.name} STOREFRONT={STOREFRONT} onReportClick={() => setShowReport(true)} socials={socials} />
 
       {store && (
         <Suspense fallback={null}>

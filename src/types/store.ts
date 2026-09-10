@@ -11,6 +11,7 @@ export interface StoreRow {
   hero_image_url: string | null;
   hero_title: string | null;
   hero_subtitle: string | null;
+  logo_url: string | null;
   payment_phone: string | null;
   payment_name: string | null;
   payment_methods: Record<string, unknown> | null;
@@ -119,6 +120,7 @@ export interface BrandFormState {
   hero_image_url: string | null;
   hero_title: string;
   hero_subtitle: string;
+  logo_url: string | null;
   payment_qr_image: string | null;
   payment_phone: string;
   payment_name: string;

@@ -12,6 +12,8 @@ const PLAN_OPTIONS = [
   { value: "pro_year", label: "Pro Yearly" },
 ];
 
+const PRO_PLANS = ["pro_month", "pro_year", "pro", "standard", "pro_monthly"];
+
 const STATUS_OPTIONS = [
   { value: "none", label: "None" },
   { value: "pre_authorized", label: "Pending" },
@@ -140,7 +142,7 @@ const UsersTab = () => {
   };
 
   const planBadge = (plan: string) => {
-    if (plan === "pro_month" || plan === "pro_year") return "bg-foreground/10 text-foreground";
+    if (PRO_PLANS.includes(plan)) return "bg-foreground/10 text-foreground";
     return "bg-gray-500/10 text-gray-500";
   };
 
@@ -190,9 +192,9 @@ const UsersTab = () => {
                     {u.email || "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {u.plan_type === "pro_month" || u.plan_type === "pro_year" ? (
+                    {PRO_PLANS.includes(u.plan_type) ? (
                       <span className={`inline-block px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wider ${planBadge(u.plan_type)}`}>
-                        {u.plan_type === "pro_month" ? "Pro Monthly" : "Pro Yearly"}
+                        {u.plan_type === "pro_year" ? "Pro Yearly" : "Pro"}
                       </span>
                     ) : (
                       <span className="font-mono text-[10px] text-muted-foreground">—</span>

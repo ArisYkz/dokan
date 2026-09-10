@@ -805,6 +805,7 @@ export type Database = {
           instagram: string | null
           is_paused: boolean | null
           is_verified: boolean
+          logo_url: string | null
           name: string
           payment_qr_image: string | null
           payment_name: string | null
@@ -850,6 +851,7 @@ export type Database = {
           instagram?: string | null
           is_paused?: boolean | null
           is_verified?: boolean
+          logo_url?: string | null
           name: string
           payment_qr_image?: string | null
           payment_name?: string | null
@@ -895,6 +897,7 @@ export type Database = {
           instagram?: string | null
           is_paused?: boolean | null
           is_verified?: boolean
+          logo_url?: string | null
           name?: string
           payment_qr_image?: string | null
           payment_name?: string | null

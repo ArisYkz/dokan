@@ -16,7 +16,7 @@ const ManifestoSection = () => {
       <div className="container">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="max-w-2xl mx-auto text-center mb-16 md:mb-20">
           <span className="font-mono text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4 block">{LANDING.OUR_PRINCIPLES}</span>
-          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground leading-[1.1]">{(LANDING.NO_COMMISSION_DESC as string).split('.')[0]}.</h2>
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground leading-[1.1]">{(LANDING.NO_COMMISSION_DESC as string).split(/[.।]/)[0]}.</h2>
           <p className="font-body text-muted-foreground mt-6 text-base md:text-lg leading-relaxed max-w-lg mx-auto">{LANDING.DIGITAL_PRESENCE_DESC}</p>
         </motion.div>
 

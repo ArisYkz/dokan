@@ -5,10 +5,10 @@ import {
   Info, Lock, Check, ChevronDown, Globe, Link as LinkIcon,
   Smartphone, User, Percent, Store, Banknote, Phone,
 } from "lucide-react";
-import bkashLogo from "@/assets/wallets/bkash.svg";
-import nagadLogo from "@/assets/wallets/nagad.svg";
-import rocketLogo from "@/assets/wallets/rocket.svg";
-import upayLogo from "@/assets/wallets/upay.svg";
+import bkashLogo from "@/assets/wallets/bkash.png";
+import nagadLogo from "@/assets/wallets/nagad.png";
+import rocketLogo from "@/assets/wallets/rocket.png";
+import upayLogo from "@/assets/wallets/upay.png";
 import {
   WALLET_KEYS, type WalletKey, type PaymentMethodsConfig,
   walletIsUsable, PAYMENT_METHOD_LABELS,
@@ -555,6 +555,24 @@ const BrandingTab = ({
                   />
                 </Field>
               </div>
+
+              <div className="pt-1 space-y-3">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs md:text-sm font-semibold tracking-[0.2em] uppercase text-foreground opacity-90">{BRANDING.LOGO}</h4>
+                  <p className="text-xs md:text-sm text-muted-foreground/50">{BRANDING.LOGO_DESC}</p>
+                </div>
+                <ImageCropUpload
+                  bucket="store-assets"
+                  folder={userId}
+                  value={brandForm.logo_url}
+                  onUpload={(url) => set("logo_url", url)}
+                  onRemove={() => set("logo_url", null)}
+                  label={BRANDING.UPLOAD_LOGO}
+                  previewClass="w-20 h-20 object-contain rounded-sm border border-border/20"
+                  aspectRatio={1}
+                  imageType="logo"
+                />
+              </div>
             </div>
 
             {/* Divider */}
@@ -650,7 +668,7 @@ const BrandingTab = ({
                   <div key={key} className="rounded-none border border-border/30 p-3 space-y-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
-                        <img src={WALLET_LOGOS[key]} alt="" className="w-6 h-6 rounded-sm shrink-0" />
+                        <img src={WALLET_LOGOS[key]} alt="" className="w-6 h-6 rounded-sm object-contain shrink-0" />
                         <span className="text-xs md:text-sm font-medium text-foreground/80 truncate">{PAYMENT_METHOD_LABELS[key]}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

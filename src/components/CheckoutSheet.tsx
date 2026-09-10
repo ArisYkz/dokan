@@ -22,10 +22,10 @@ import {
 } from "@/constants/paymentMethods";
 import { normalizeCarriers } from "@/constants/delivery";
 import { buildFullAddress, isAddressTooLong } from "@/lib/address";
-import bkashLogo from "@/assets/wallets/bkash.svg";
-import nagadLogo from "@/assets/wallets/nagad.svg";
-import rocketLogo from "@/assets/wallets/rocket.svg";
-import upayLogo from "@/assets/wallets/upay.svg";
+import bkashLogo from "@/assets/wallets/bkash.png";
+import nagadLogo from "@/assets/wallets/nagad.png";
+import rocketLogo from "@/assets/wallets/rocket.png";
+import upayLogo from "@/assets/wallets/upay.png";
 
 interface CheckoutSheetProps {
   cart: CartItem[];
@@ -485,7 +485,7 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
                               className={`w-full flex items-center gap-3 border p-4 text-left transition-colors ${active ? "border-foreground bg-muted/50" : "border-border hover:border-foreground/60"}`}
                             >
                               {wallet ? (
-                                <img src={{ bkash: bkashLogo, nagad: nagadLogo, rocket: rocketLogo, upay: upayLogo }[m as "bkash" | "nagad" | "rocket" | "upay"]} alt="" className="w-8 h-8 rounded-sm" />
+                                <img src={{ bkash: bkashLogo, nagad: nagadLogo, rocket: rocketLogo, upay: upayLogo }[m as "bkash" | "nagad" | "rocket" | "upay"]} alt="" className="w-8 h-8 rounded-sm object-contain" />
                               ) : m === "bank" ? (
                                 <WalletIcon className="w-6 h-6 text-foreground" />
                               ) : m === "cod" ? (

@@ -4,7 +4,7 @@ import { Upload, Loader2, X, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
-import { applyPercentDiscount } from "@/lib/billing";
+import { applyPercentDiscount, isPaidPlan } from "@/lib/billing";
 import { useLabels } from "@/hooks/useLabels";
 
 const QR_IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/qr-codes/IPQR.png`;
@@ -43,7 +43,7 @@ const SubscriptionSection = ({ userId, profile, isPro, onDataChange }: Subscript
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
-  const isActive = dbPlan === "standard" && dbStatus === "active";
+  const isActive = dbStatus === "active" && isPaidPlan(dbPlan, dbStatus);
   const isPending = dbStatus === "pre_authorized";
 
   const handleApplyPromo = async () => {
@@ -109,7 +109,26 @@ const SubscriptionSection = ({ userId, profile, isPro, onDataChange }: Subscript
         <p className="font-mono text-[10px] text-accent tracking-wider">✓ {promoDiscount}% discount applied</p>
       )}
 
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto space-y-6">
+        {/* Free — 3-day trial */}
+        <div className="text-left w-full border border-border rounded-none p-3 md:p-6 flex flex-col relative bg-background">
+          <div className="mb-3 md:mb-6">
+            <p className="font-body text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-muted-foreground mb-0.5 md:mb-1">{BILLING.FREE_TRIAL}</p>
+            <h3 className="font-body text-[11px] md:text-sm font-semibold tracking-[0.12em] uppercase text-foreground">{BILLING.FREE}</h3>
+          </div>
+          <div className="space-y-1.5 md:space-y-3 mb-4 md:mb-8 flex-grow">
+            {(BILLING.FEATURES_BASIC as string[]).map((f) => (<p key={f} className="font-mono text-[10px] md:text-xs tracking-wide text-muted-foreground uppercase leading-relaxed">• {f}</p>))}
+          </div>
+          <div className="pt-3 md:pt-4 border-t border-border/40">
+            <div className="text-right mb-3 md:mb-4">
+              <p className="font-mono text-[11px] md:text-sm text-foreground/80">{formatPrice(0)}</p>
+            </div>
+            <div className="w-full py-2 md:py-2.5 text-center font-body text-[10px] md:text-[11px] tracking-[0.15em] uppercase border border-border/40 text-muted-foreground/40">
+              {BILLING.FREE_TRIAL}
+            </div>
+          </div>
+        </div>
+
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className={`text-left w-full border border-border rounded-none p-3 md:p-6 flex flex-col relative ${isActive || isPending ? "bg-muted/50 border-foreground/40 shadow-sm" : "bg-background hover:border-foreground/20"}`}
         >
