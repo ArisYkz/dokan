@@ -1,6 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProductImageRow } from "@/types/store";
 import { deleteStorageFile, deleteStorageFiles } from "@/lib/storageCleanup";
+import { slugifyProductName } from "@/lib/normalizeSlug";
+
+/**
+ * Generate a store-unique product slug, appending -2, -3, … on collision.
+ */
+const ensureUniqueProductSlug = async (storeId: string, baseSlug: string, excludeId?: string): Promise<string> => {
+  let slug = baseSlug;
+  let suffix = 2;
+  while (true) {
+    let query = supabase.from("products").select("id").eq("store_id", storeId).eq("slug", slug);
+    if (excludeId) query = query.neq("id", excludeId);
+    const { data } = await query.maybeSingle();
+    if (!data) return slug;
+    slug = `${baseSlug}-${suffix++}`;
+  }
+};
 
 /**
  * Fetch all products for a store.
@@ -252,7 +268,11 @@ export const createProduct = async (data: {
     .insert({ ...data, category: trimmed })
     .select("id");
   if (error || !inserted || inserted.length === 0) return { id: null, error };
-  return { id: inserted[0].id, error: null };
+
+  const id = inserted[0].id;
+  const slug = await ensureUniqueProductSlug(data.store_id, slugifyProductName(data.name, id));
+  await supabase.from("products").update({ slug }).eq("id", id);
+  return { id, error: null };
 };
 
 export const createProductsBulk = async (rows: Array<{
@@ -363,7 +383,8 @@ export const updateProduct = async (
     if (categoryError) return { error: categoryError };
   }
 
-  const { error } = await supabase.from("products").update({ ...data, category: trimmedCategory }).eq("id", productId);
+  const slug = await ensureUniqueProductSlug(data.store_id, slugifyProductName(data.name, productId), productId);
+  const { error } = await supabase.from("products").update({ ...data, slug, category: trimmedCategory }).eq("id", productId);
   return { error };
 };
 

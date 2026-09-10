@@ -48,6 +48,7 @@ export interface StoreRow {
 export interface ProductRow {
   id: string;
   store_id: string;
+  slug: string | null;
   name: string;
   price: number;
   description: string | null;
@@ -94,6 +95,7 @@ export interface OrderRow {
 
 export interface Product {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   image?: string;

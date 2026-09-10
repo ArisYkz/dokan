@@ -8,8 +8,8 @@ const cyrillicToLatin: Record<string, string> = {
   "ы": "y", "і": "i", "ь": "", "э": "e", "ю": "yu", "я": "ya",
 };
 
-export const normalizeSlug = (name: string): string => {
-  const slug = name
+const slugify = (text: string): string =>
+  text
     .toLowerCase()
     .trim()
     .split("")
@@ -21,5 +21,13 @@ export const normalizeSlug = (name: string): string => {
     .replace(/^-+|-+$/g, "")
     .slice(0, 30);
 
-  return slug || "store";
+export const normalizeSlug = (name: string): string => slugify(name) || "store";
+
+/**
+ * Slugify a product name for the storefront deep link (/<store>/<product-slug>).
+ * Falls back to a short id-based slug when the name has no ASCII (e.g. Bengali).
+ */
+export const slugifyProductName = (name: string, id: string): string => {
+  const base = slugify(name);
+  return base || `p-${id.replace(/-/g, "").slice(0, 8)}`;
 };

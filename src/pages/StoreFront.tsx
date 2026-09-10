@@ -27,6 +27,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { FREE_CONFIRMED_LIMIT } from "@/constants/business";
 import { incrementStoreViews } from "@/services/storeService";
 import { isPaidPlan } from "@/lib/billing";
+import { slugifyProductName } from "@/lib/normalizeSlug";
 import { useStorefrontStore, useStorefrontProducts } from "@/hooks/queries/useStorefront";
 
 // Lazy-load heavy components
@@ -44,6 +45,7 @@ type ProductRowFromDB = Database["public"]["Tables"]["products"]["Row"];
 const mapProducts = (fetchedProducts: ProductRowFromDB[]): ProductWithCategory[] =>
   fetchedProducts.map((p) => ({
     id: p.id, name: p.name, price: p.price,
+    slug: p.slug ?? slugifyProductName(p.name, p.id),
     image: p.image_url || "/placeholder.svg",
     description: p.description || "", stock: p.stock,
     category: p.category || null,
@@ -53,7 +55,7 @@ const mapProducts = (fetchedProducts: ProductRowFromDB[]): ProductWithCategory[]
   }));
 
 const StoreFront = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, productSlug } = useParams<{ slug: string; productSlug?: string }>();
   const navigate = useNavigate();
   const { STOREFRONT } = useLabels();
   const { dark } = useTheme();
@@ -135,8 +137,18 @@ const StoreFront = () => {
   // Cart hook with localStorage persistence
   const { cart, addToCart, updateQuantity, removeFromCart, clearCart, cartCount } = useCart();
 
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+
+  // Deep-link product detail: /<store>/<product-slug> opens the product modal
+  const selectedProduct = useMemo<Product | null>(() => {
+    if (!productSlug) return null;
+    return products.find((p) => p.slug === productSlug) ?? null;
+  }, [productSlug, products]);
+
+  const openProduct = (product: Product) => {
+    if (!product.slug) return;
+    navigate(`/${slug}/${product.slug}`);
+  };
 
   const productImagesMap = prodData?.images ?? {};
   const productVariantsMap = prodData?.variants ?? {};
@@ -331,7 +343,7 @@ const StoreFront = () => {
           products={categoryFilteredProducts}
           productVariantsMap={productVariantsMap}
           activeCategory={activeCategory}
-          onSelect={setSelectedProduct}
+          onSelect={openProduct}
           onQuickAdd={addToCart}
           isPaused={storePaused}
           STOREFRONT={STOREFRONT}
@@ -356,7 +368,7 @@ const StoreFront = () => {
           }>
             <ProductDetail
               product={selectedProduct}
-              onClose={() => setSelectedProduct(null)}
+              onClose={() => navigate(`/${slug}`)}
               onAddToCart={addToCart}
               galleryImages={productImagesMap[selectedProduct.id] ?? []}
               variants={productVariantsMap[selectedProduct.id] ?? []}
