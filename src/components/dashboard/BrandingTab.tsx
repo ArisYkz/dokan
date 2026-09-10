@@ -595,24 +595,6 @@ const BrandingTab = ({
                   />
                 </Field>
               </div>
-
-              <div className="pt-1 space-y-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs md:text-sm font-semibold tracking-[0.2em] uppercase text-foreground opacity-90">{BRANDING.LOGO}</h4>
-                  <p className="text-xs md:text-sm text-muted-foreground/50">{BRANDING.LOGO_DESC}</p>
-                </div>
-                <ImageCropUpload
-                  bucket="store-assets"
-                  folder={userId}
-                  value={brandForm.logo_url}
-                  onUpload={(url) => set("logo_url", url)}
-                  onRemove={() => set("logo_url", null)}
-                  label={BRANDING.UPLOAD_LOGO}
-                  previewClass="w-20 h-20 object-contain rounded-sm border border-border/20"
-                  aspectRatio={1}
-                  imageType="logo"
-                />
-              </div>
             </div>
 
             {/* Divider */}
