@@ -37,13 +37,6 @@ Deno.serve(async (req) => {
   const telegramApiKey = Deno.env.get('TELEGRAM_API_KEY');
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  if (!telegramApiKey) {
-    return new Response(JSON.stringify({ error: 'TELEGRAM_API_KEY is not configured' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
     const payload = await req.json();
     console.log('claim-payment request body:', JSON.stringify(payload));
@@ -144,7 +137,7 @@ Deno.serve(async (req) => {
 
     let notificationError: string | null = null;
 
-    if (store.telegram_chat_id) {
+    if (telegramApiKey && store.telegram_chat_id) {
       const caption = `
 ✦  <b>PAYMENT CONFIRMATION</b>  ✦
 ━━━━━━━━━━━━━━━━━━
