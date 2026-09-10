@@ -36,12 +36,9 @@ export const createStore = async (userId: string, name: string, slug: string) =>
   await supabase.auth.refreshSession();
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !session) {
-    console.error("DEBUG: no active session - passed userId:", userId);
     return { error: { message: "No active session", code: "403" } };
   }
-  console.log("DEBUG session.user.id:", session.user.id, "passed userId:", userId);
   if (session.user.id !== userId) {
-    console.error("DEBUG MISMATCH session.user.id:", session.user.id, "passed userId:", userId);
     return { error: { message: "User ID does not match session", code: "403" } };
   }
 
