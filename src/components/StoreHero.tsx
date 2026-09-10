@@ -72,12 +72,12 @@ const StoreHero = ({ store }: StoreHeroProps) => {
                     {store.hero_title}
                   </h2>
                 )}
+                {logoMark}
                 {store.hero_subtitle && (
                   <p className="font-mono text-[11px] md:text-xs uppercase tracking-[0.15em] mt-2 max-w-[320px]" style={{ color: "hsl(var(--muted-foreground))" }}>
                     {store.hero_subtitle}
                   </p>
                 )}
-                {logoMark}
               </div>
             </div>
           </div>
@@ -95,12 +95,12 @@ const StoreHero = ({ store }: StoreHeroProps) => {
             {store.hero_title}
           </h2>
         )}
+        {logoMark}
         {store.hero_subtitle && (
-          <p className="font-mono text-[11px] md:text-xs uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <p className="font-mono text-[11px] md:text-xs uppercase mt-2" style={{ color: "hsl(var(--muted-foreground))" }}>
             {store.hero_subtitle}
           </p>
         )}
-        {logoMark}
       </section>
       {lightbox}
     </>
