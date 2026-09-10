@@ -195,6 +195,13 @@ Deno.serve(async (req) => {
 
     console.log('notify-order fetched order:', JSON.stringify(order));
 
+    // Full (unmasked) customer phone lives in order_contacts (RLS-protected)
+    const { data: contact } = await supabase
+      .from('order_contacts')
+      .select('customer_phone')
+      .eq('order_id', order_id)
+      .maybeSingle();
+
     const { data: items } = await supabase
       .from('order_items')
       .select('product_name, quantity, product_price')
@@ -213,7 +220,7 @@ Deno.serve(async (req) => {
 
     const pii = {
       name: order.customer_name || '—',
-      phone: order.customer_phone || '—',
+      phone: contact?.customer_phone || order.customer_phone || '—',
       address: order.customer_address || '—',
     };
 
