@@ -494,6 +494,16 @@ const BrandingTab = ({
             </div>
           </SectionCard>
 
+          {/* ── Card: Marketing QR ── */}
+          <SectionCard>
+            <QrMarketingCard
+              storeSlug={store.slug}
+              storeName={store.name}
+              isPro={isPro}
+              onUpgrade={onShowUpgrade || (() => {})}
+            />
+          </SectionCard>
+
           {/* ── Card: Tax Settings ── */}
           <SectionCard title={BRANDING.TAX_SETTINGS} description={BRANDING.TAX_DESC}>
             <div className="flex items-center justify-between">
@@ -871,16 +881,6 @@ const BrandingTab = ({
                 </button>
               </div>
             </div>
-          </SectionCard>
-
-          {/* ── Card: Marketing QR ── */}
-          <SectionCard>
-            <QrMarketingCard
-              storeSlug={store.slug}
-              storeName={store.name}
-              isPro={isPro}
-              onUpgrade={onShowUpgrade || (() => {})}
-            />
           </SectionCard>
 
         </div>
