@@ -21,15 +21,21 @@ Deno.serve(async (req) => {
     const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    // Expire stale "new" orders (>30 min)
+    // Expire stale "new" orders (>30 min), except no-payment orders (COD /
+    // contact-seller) — those wait for the seller to confirm them
     const { data: staleNewOrders, error: fetchNewErr } = await supabase
       .from('orders')
-      .select('id')
+      .select('id, payment_method')
       .eq('status', 'new')
       .lt('created_at', thirtyMinAgo)
       .limit(200);
 
     if (fetchNewErr) throw fetchNewErr;
+
+    const NO_PAYMENT_METHODS = new Set(['cod', 'contact_us']);
+    const expirableNewOrders = (staleNewOrders || []).filter(
+      (o: any) => !NO_PAYMENT_METHODS.has(o.payment_method),
+    );
 
     // Expire stale "awaiting_verification" orders (>24 hours)
     const { data: staleAwaitingOrders, error: fetchAwaitErr } = await supabase
@@ -41,7 +47,7 @@ Deno.serve(async (req) => {
 
     if (fetchAwaitErr) throw fetchAwaitErr;
 
-    const staleOrders = [...(staleNewOrders || []), ...(staleAwaitingOrders || [])];
+    const staleOrders = [...expirableNewOrders, ...(staleAwaitingOrders || [])];
 
     if (staleOrders.length === 0) {
       return new Response(JSON.stringify({ expired: 0 }), {

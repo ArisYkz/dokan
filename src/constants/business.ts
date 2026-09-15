@@ -28,6 +28,9 @@ export const CONFIRMED_STATUSES: string[] = [
   OrderStatus.DELIVERED,
 ];
 
+/** Payment methods that need no online payment — orders start as Pending (new) */
+export const NO_PAYMENT_METHODS: string[] = ["cod", "contact_us"];
+
 /** Statuses that belong in the Archive tab */
 export const ARCHIVED_STATUSES: string[] = [
   OrderStatus.DELIVERED,

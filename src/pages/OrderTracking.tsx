@@ -9,6 +9,7 @@ import { useLabels } from "@/hooks/useLabels";
 import { useTranslation } from "react-i18next";
 import StarRating from "@/components/StarRating";
 import { normalizePaymentMethods, WALLET_KEYS, type WalletKey } from "@/constants/paymentMethods";
+import { NO_PAYMENT_METHODS } from "@/constants/business";
 
 interface OrderData {
   id: string;
@@ -45,14 +46,20 @@ interface StoreData {
 
 const PAYMENT_WINDOW_MS = 30 * 60 * 1000;
 
-const STEP_ICONS = [Package, Clock, Check, Truck, Check];
+const STEP_ICONS: Record<string, typeof Package> = {
+  new: Package, awaiting_verification: Clock, paid_confirmed: Check,
+  confirmed: Check, shipped: Truck, delivered: Check,
+};
 
 const ORDER_STEP_KEYS = ["new", "awaiting_verification", "paid_confirmed", "shipped", "delivered"];
 
-const getStatusIndex = (status: string) => {
+// No-payment orders (COD / contact-seller) skip the payment steps entirely
+const NO_PAY_STEP_KEYS = ["new", "confirmed", "shipped", "delivered"];
+
+const getStatusIndex = (status: string, stepKeys: string[]) => {
   if (status === "payment_rejected") return 1;
   if (status === "cancelled") return -1;
-  return ORDER_STEP_KEYS.indexOf(status);
+  return stepKeys.indexOf(status);
 };
 
 const formatCountdown = (ms: number) => {
@@ -65,7 +72,6 @@ const formatCountdown = (ms: number) => {
 const OrderTracking = () => {
   const { TRACKING, ACTIONS, MESSAGES, STATUS_DISPLAY, ORDER_STEPS: ORDER_STEPS_RAW, ERRORS, RETURNS, CHECKOUT } = useLabels();
   const { t } = useTranslation();
-  const ORDER_STEPS = ORDER_STEP_KEYS.map(key => ({ key, label: (ORDER_STEPS_RAW as Record<string, string>)[key] || key }));
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderData | null>(null);
   const [store, setStore] = useState<StoreData | null>(null);
@@ -81,6 +87,10 @@ const OrderTracking = () => {
   const [submittingReview, setSubmittingReview] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
+  const isNoPay = !!(order && NO_PAYMENT_METHODS.includes(order.payment_method ?? ""));
+  const stepKeys = isNoPay ? NO_PAY_STEP_KEYS : ORDER_STEP_KEYS;
+  const ORDER_STEPS = stepKeys.map(key => ({ key, label: (ORDER_STEPS_RAW as Record<string, string>)[key] || key }));
+
   const computeRemaining = useCallback((createdAt: string) => {
     const elapsed = Date.now() - new Date(createdAt).getTime();
     return Math.max(0, PAYMENT_WINDOW_MS - elapsed);
@@ -93,7 +103,7 @@ const OrderTracking = () => {
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (!order || order.status !== "new") { setRemaining(null); return; }
+    if (!order || order.status !== "new" || isNoPay) { setRemaining(null); return; }
 
     const update = () => {
       const r = computeRemaining(order.created_at);
@@ -103,7 +113,7 @@ const OrderTracking = () => {
     update();
     timerRef.current = setInterval(update, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [order, computeRemaining]);
+  }, [order, isNoPay, computeRemaining]);
 
   const loadOrder = async () => {
     if (!id) { setNotFound(true); setLoading(false); return; }
@@ -265,10 +275,10 @@ const OrderTracking = () => {
     );
   }
 
-  const currentIdx = getStatusIndex(order.status);
+  const currentIdx = getStatusIndex(order.status, stepKeys);
   const isCancelled = order.status === "cancelled";
   const isRejected = order.status === "payment_rejected";
-  const canClaimPayment = ["new", "payment_rejected"].includes(order.status);
+  const canClaimPayment = !isNoPay && ["new", "payment_rejected"].includes(order.status);
   const pmConfig = normalizePaymentMethods(store?.payment_methods);
   const orderMethod = order.payment_method;
   const methodWallet = orderMethod && WALLET_KEYS.includes(orderMethod as WalletKey)
@@ -279,7 +289,7 @@ const OrderTracking = () => {
   const recipientQr = (orderMethod && methodWallet?.qr_url) ? methodWallet.qr_url : store?.payment_qr_image || null;
   const hasQR = !!recipientQr;
   const hasPayment = !!(recipientPhone && (methodWallet || store?.payment_name));
-  const isExpired = order.status === "new" && remaining !== null && remaining <= 0;
+  const isExpired = order.status === "new" && !isNoPay && remaining !== null && remaining <= 0;
 
   // Expired state
   if (isExpired) {
@@ -379,7 +389,7 @@ const OrderTracking = () => {
             {ORDER_STEPS.map((step, i) => {
               const isActive = i <= currentIdx;
               const isCurrent = i === currentIdx;
-              const Icon = STEP_ICONS[i];
+              const Icon = STEP_ICONS[step.key] || Package;
               return (
                 <div key={step.key} className="flex items-center gap-4">
                   <div className="flex flex-col items-center">

@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
       subtotal: totalPrice,
       tax_amount: taxAmount,
       total_price: finalPrice,
-      status: isNoPayMethod ? "confirmed" : "awaiting_verification",
+      status: isNoPayMethod ? "new" : "awaiting_verification",
       payment_method: input.paymentMethod || null,
       reference_code: refCode,
       promo_code: input.promoCode || null,

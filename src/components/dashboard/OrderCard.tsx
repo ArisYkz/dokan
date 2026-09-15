@@ -89,11 +89,14 @@ const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm,
             const allowed: string[] = [cur];
 
             if (cur === "new") {
-              allowed.push("awaiting_verification", "paid_confirmed", "cancelled");
+              allowed.push("awaiting_verification", "paid_confirmed", "confirmed", "cancelled");
             } else if (cur === "awaiting_verification") {
               allowed.push("paid_confirmed", "payment_rejected", "cancelled");
             } else if (cur === "paid_confirmed") {
               if (!pastGrace) allowed.push("awaiting_verification");
+              allowed.push("shipped", "cancelled");
+            } else if (cur === "confirmed") {
+              if (!pastGrace) allowed.push("new");
               allowed.push("shipped", "cancelled");
             } else if (cur === "payment_rejected") {
               allowed.push("awaiting_verification", "cancelled");
@@ -107,9 +110,10 @@ const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm,
             const unique = [...new Set(allowed)];
 
             const allStatuses = [
-              { value: "new", label: STATUS_LABELS.new || "New" },
+              { value: "new", label: STATUS_LABELS.new || "Pending Order" },
               { value: "awaiting_verification", label: STATUS_LABELS.awaiting_verification },
               { value: "paid_confirmed", label: STATUS_LABELS.paid_confirmed },
+              { value: "confirmed", label: STATUS_LABELS.confirmed || "Confirmed" },
               { value: "payment_rejected", label: STATUS_LABELS.payment_rejected },
               { value: "shipped", label: STATUS_LABELS.shipped },
               { value: "delivered", label: STATUS_LABELS.delivered },
@@ -138,6 +142,7 @@ const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm,
               const colors: Record<string, string> = {
                 awaiting_verification: "bg-[hsl(45,80%,50%)]",
                 paid_confirmed: "bg-accent",
+                confirmed: "bg-[hsl(140,65%,45%)]",
                 cancelled: "bg-destructive",
                 payment_rejected: "bg-destructive",
                 shipped: "bg-primary",
