@@ -214,9 +214,9 @@ Deno.serve(async (req) => {
       .single();
 
     console.log('notify-order store info:', JSON.stringify(store));
-    // Telegram notifications are delivered on every plan — gated only by
-    // whether the seller connected a chat (consistent with claim-payment)
-    if (!store || !store.telegram_chat_id) return ok({ success: true, message: 'No Telegram connected' });
+    const proPlans = ['standard', 'pro', 'pro_monthly', 'pro_year'];
+    if (!store || !proPlans.includes(store.plan_type)) return ok({ success: true, message: 'Not a Pro plan, skipped' });
+    if (!store.telegram_chat_id) return ok({ success: true, message: 'No Telegram connected' });
 
     const pii = {
       name: order.customer_name || '—',
