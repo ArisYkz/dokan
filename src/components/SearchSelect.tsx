@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { BANGLADESH_CITIES } from "@/constants/bangladeshCities";
 
-interface CityDropdownProps {
+interface SearchSelectProps {
+  options: string[];
   value: string;
-  onChange: (city: string) => void;
+  onChange: (value: string) => void;
   placeholder: string;
   searchPlaceholder: string;
 }
 
-const CityDropdown = ({ value, onChange, placeholder, searchPlaceholder }: CityDropdownProps) => {
+const SearchSelect = ({ options, value, onChange, placeholder, searchPlaceholder }: SearchSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -41,14 +41,14 @@ const CityDropdown = ({ value, onChange, placeholder, searchPlaceholder }: CityD
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
-          {BANGLADESH_CITIES.filter((c) => c.toLowerCase().includes(search.toLowerCase())).map((city) => (
+          {options.filter((option) => option.toLowerCase().includes(search.toLowerCase())).map((option) => (
             <button
-              key={city}
+              key={option}
               type="button"
-              onClick={() => { onChange(city); setOpen(false); setSearch(""); }}
+              onClick={() => { onChange(option); setOpen(false); setSearch(""); }}
               className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors text-foreground"
             >
-              {city}
+              {option}
             </button>
           ))}
         </div>
@@ -57,4 +57,4 @@ const CityDropdown = ({ value, onChange, placeholder, searchPlaceholder }: CityD
   );
 };
 
-export default CityDropdown;
+export default SearchSelect;

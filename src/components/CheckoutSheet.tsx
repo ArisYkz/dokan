@@ -9,7 +9,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { translateVariant, translateVariantType } from "@/lib/translateVariant";
 import { isPlaceholder, getPlaceholderImage } from "@/lib/placeholders";
 import { getOptimizedProductImageUrl } from "@/lib/imageTransform";
-import CityDropdown from "@/components/CityDropdown";
+import SearchSelect from "@/components/SearchSelect";
+import { BANGLADESH_DIVISIONS, BANGLADESH_DISTRICTS } from "@/constants/bangladeshRegions";
 import PaymentView from "@/components/PaymentView";
 import OrderConfirmation from "@/components/OrderConfirmation";
 import type { CartItem } from "@/types/store";
@@ -53,7 +54,7 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
     const { CHECKOUT, MESSAGES, ACTIONS } = useLabels();
     const { language } = useLanguage();
     const [step, setStep] = useState<"cart" | "pay" | "done">("cart");
-    const [form, setForm] = useState({ name: "", phone: "", city: "", zip: "", street: "", house: "" });
+    const [form, setForm] = useState({ name: "", phone: "", division: "", district: "", zip: "", street: "", house: "" });
     const [loading, setLoading] = useState(false);
     const [order, setOrder] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState(PAYMENT_WINDOW);
@@ -167,7 +168,7 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!form.name || form.phone.length < 10 || !form.city || !form.street) return toast.error(MESSAGES.FILL_ALL_FIELDS);
+      if (!form.name || form.phone.length < 10 || !form.division || !form.district || !form.street) return toast.error(MESSAGES.FILL_ALL_FIELDS);
 
       const fullAddress = buildFullAddress(form);
       if (isAddressTooLong(fullAddress)) return toast.error(CHECKOUT.ADDRESS_TOO_LONG);
@@ -420,13 +421,25 @@ const CheckoutSheet = forwardRef<HTMLDivElement, CheckoutSheetProps>(
                       <p className="text-sm font-medium text-foreground">{CHECKOUT.BANGLADESH}</p>
                     </div>
 
-                    {/* City dropdown */}
-                    <CityDropdown
-                      value={form.city}
-                      onChange={(city) => setForm({ ...form, city })}
-                      placeholder={CHECKOUT.SELECT_CITY}
+                    {/* Division dropdown */}
+                    <SearchSelect
+                      options={BANGLADESH_DIVISIONS}
+                      value={form.division}
+                      onChange={(division) => setForm({ ...form, division, district: "" })}
+                      placeholder={CHECKOUT.SELECT_DIVISION}
                       searchPlaceholder={ACTIONS.SEARCH}
                     />
+
+                    {/* District dropdown (after division) */}
+                    {form.division && (
+                      <SearchSelect
+                        options={BANGLADESH_DISTRICTS[form.division] || []}
+                        value={form.district}
+                        onChange={(district) => setForm({ ...form, district })}
+                        placeholder={CHECKOUT.SELECT_DISTRICT}
+                        searchPlaceholder={ACTIONS.SEARCH}
+                      />
+                    )}
 
                     {/* ZIP Code */}
                     <div>

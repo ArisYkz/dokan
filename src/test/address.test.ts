@@ -3,10 +3,10 @@ import { MAX_ADDRESS_LENGTH, buildFullAddress, isAddressTooLong } from "@/lib/ad
 
 describe("buildFullAddress", () => {
   it("builds the full address from the form parts", () => {
-    expect(buildFullAddress({ city: "Dhaka", zip: "1213", street: "Road 5", house: "House 10" }))
-      .toBe("Dhaka, ZIP 1213, Road 5, House 10");
-    expect(buildFullAddress({ city: "Dhaka", zip: "", street: "Road 5", house: "" }))
-      .toBe("Dhaka, Road 5");
+    expect(buildFullAddress({ division: "Dhaka Division", district: "Dhaka", zip: "1213", street: "Road 5", house: "House 10" }))
+      .toBe("House 10, Road 5, Dhaka-1213, Dhaka Division");
+    expect(buildFullAddress({ division: "Dhaka Division", district: "Dhaka", zip: "", street: "Road 5", house: "" }))
+      .toBe("Road 5, Dhaka, Dhaka Division");
   });
 });
 
