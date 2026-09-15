@@ -462,16 +462,16 @@ const BulkUploadComponent = ({ storeId, userId, existingCategories, isPro, onCat
 
           <div className="overflow-x-auto">
             <div className="min-w-[760px] rounded-sm border border-[hsl(var(--border)/0.3)]">
-              <div className="grid grid-cols-[50px_minmax(220px,1fr)_120px_180px] gap-0 bg-[hsl(var(--surface-warm))] border-b border-[hsl(var(--border)/0.3)] px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                <span>{BULK_UPLOAD.PREVIEW}</span>
-                <span>{BULK_UPLOAD.PRODUCT}</span>
-                <span>{BULK_UPLOAD.PRICE_STOCK}</span>
-                <span>{BULK_UPLOAD.CATEGORY}</span>
+              <div className="grid grid-cols-[90px_minmax(220px,1fr)_120px_180px] gap-0 bg-[hsl(var(--surface-warm))] border-b border-[hsl(var(--border)/0.3)] px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="whitespace-nowrap">{BULK_UPLOAD.PREVIEW}</span>
+                <span className="whitespace-nowrap">{BULK_UPLOAD.PRODUCT}</span>
+                <span className="whitespace-nowrap">{BULK_UPLOAD.PRICE_STOCK}</span>
+                <span className="whitespace-nowrap">{BULK_UPLOAD.CATEGORY}</span>
               </div>
               <div className="space-y-1 p-3">
                 {draftProducts.map((draft, index) => (
                   <div key={draft.id} className="rounded-sm border border-[hsl(var(--border)/0.3)] bg-[hsl(var(--card))]">
-                    <div className="grid grid-cols-[50px_minmax(220px,1fr)_120px_180px] gap-3 items-center p-2">
+                    <div className="grid grid-cols-[90px_minmax(220px,1fr)_120px_180px] gap-3 items-center p-2">
                       <div className="relative h-12 w-12 overflow-hidden rounded-sm bg-[hsl(var(--background))]">
                         <img src={draft.thumbnail} alt={draft.name} className="h-full w-full object-cover" />
                         <button
