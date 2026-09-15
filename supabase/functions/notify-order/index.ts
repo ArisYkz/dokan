@@ -232,7 +232,19 @@ Deno.serve(async (req) => {
       ? `\n🏷  <b>Discount:</b>  −${order.discount_amount.toLocaleString()} ৳`
       : '';
 
-    const caption = `
+    // Expired orders arrive from expire-stale-orders with type: 'expired' —
+    // send an expiry alert instead of the new-order template
+    const caption = body.type === 'expired'
+      ? `
+✦  <b>ORDER EXPIRED</b>  ✦
+━━━━━━━━━━━━━━━━━━
+📦  <b>No:</b>  <code>${order.public_order_id}</code>
+👤  <b>Customer:</b>  ${pii.name}
+💰  <b>Total:</b>  ${order.total_price.toLocaleString()} ৳
+━━━━━━━━━━━━━━━━━━
+ℹ️  <i>Auto-cancelled — the payment was never confirmed. If the customer still wants the items, they need to place a new order.</i>
+      `.trim()
+      : `
 ✦  <b>NEW ORDER</b>  ✦
 ━━━━━━━━━━━━━━━━━━
 📦  <b>No:</b>  <code>${order.public_order_id}</code>
