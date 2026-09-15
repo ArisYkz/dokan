@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .select('id, store_id, public_order_id, customer_name, customer_phone, customer_phone_hash, customer_address, total_price, status, reference_code, discount_amount')
+      .select('id, store_id, public_order_id, customer_name, customer_phone, customer_phone_hash, customer_address, total_price, status, reference_code, discount_amount, payment_method')
       .eq('id', input.orderId)
       .single();
 
@@ -69,6 +69,20 @@ Deno.serve(async (req) => {
     if (input.referenceCode !== order.reference_code) {
       return new Response(JSON.stringify({ error: 'Invalid reference code.' }), {
         status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Only paid, unverified orders accept payment claims — COD/contact orders
+    // and orders already past verification can't be knocked back to it
+    const CLAIMABLE_STATUSES = new Set(['new', 'payment_rejected']);
+    const NO_PAYMENT_METHODS = new Set(['cod', 'contact_us']);
+    if (
+      !CLAIMABLE_STATUSES.has(order.status) ||
+      NO_PAYMENT_METHODS.has(order.payment_method ?? '')
+    ) {
+      return new Response(JSON.stringify({ error: 'This order does not accept payment claims.' }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
