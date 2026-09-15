@@ -416,10 +416,16 @@ export const replaceProductImages = async (productId: string, imageUrls: string[
     .select("image_url")
     .eq("product_id", productId);
   const oldUrls = existingImages?.map(img => img.image_url) || [];
-  try {
-    await deleteStorageFiles(oldUrls);
-  } catch {
-    // Silently ignore - old images will be orphaned
+  // Only delete files that are NOT kept — URLs that survive the replace must
+  // stay in storage or the re-inserted rows below would point at dead files.
+  const keep = new Set(imageUrls);
+  const staleUrls = oldUrls.filter((url) => !keep.has(url));
+  if (staleUrls.length > 0) {
+    try {
+      await deleteStorageFiles(staleUrls);
+    } catch {
+      // Silently ignore - old images will be orphaned
+    }
   }
   await supabase.from("product_images").delete().eq("product_id", productId);
   if (imageUrls.length > 0) {
