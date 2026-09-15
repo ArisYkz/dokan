@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, toWaMeDigits } from "@/lib/format";
 import {
   OrderStatus,
   ARCHIVED_STATUSES,
@@ -212,5 +212,34 @@ describe("Translations structure", () => {
         }
       });
     });
+  });
+});
+
+// ─── toWaMeDigits (WhatsApp link normalization) ──────────────────
+describe("toWaMeDigits", () => {
+  it("keeps numbers that already carry the country code", () => {
+    expect(toWaMeDigits("8801320836093")).toBe("8801320836093");
+    expect(toWaMeDigits("+8801320836093")).toBe("8801320836093");
+  });
+
+  it("prepends 880 to local trunk-format numbers", () => {
+    expect(toWaMeDigits("01320836093")).toBe("8801320836093");
+    expect(toWaMeDigits("01712-345 678")).toBe("8801712345678");
+  });
+
+  it("prepends 880 to 10-digit numbers without the trunk zero", () => {
+    expect(toWaMeDigits("1320836093")).toBe("8801320836093");
+  });
+
+  it("repairs numbers corrupted by the legacy +7 rewrite", () => {
+    expect(toWaMeDigits("7801712345678")).toBe("8801712345678");
+  });
+
+  it("leaves non-Bangladesh numbers untouched", () => {
+    expect(toWaMeDigits("14155552671")).toBe("14155552671");
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(toWaMeDigits("")).toBe("");
   });
 });

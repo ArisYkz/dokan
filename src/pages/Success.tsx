@@ -5,7 +5,7 @@ import { Check, MessageCircle, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, toWaMeDigits } from "@/lib/format";
 import { useLabels } from "@/hooks/useLabels";
 import { useTranslation } from "react-i18next";
 
@@ -51,9 +51,7 @@ const SuccessPage = () => {
           (store.whatsapp_phone || "").replace(/\D/g, "");
 
         if (platform === "whatsapp" && handle) {
-          if (handle.startsWith("8")) handle = "7" + handle.slice(1);
-          if (!handle.startsWith("7") && handle.length === 10) handle = "7" + handle;
-          handle = "+" + handle;
+          handle = toWaMeDigits(handle);
         }
 
         const itemsList = order.order_items?.map((item: any) => {

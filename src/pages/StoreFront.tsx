@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getThemeStyleVars } from "@/lib/storeThemes";
+import { toWaMeDigits } from "@/lib/format";
 import { useTheme } from "@/hooks/useTheme";
 import { useProductSorting, type SortConfig } from "@/hooks/useProductSorting";
 import { useProductSearch } from "@/hooks/useProductSearch";
@@ -167,7 +168,7 @@ const StoreFront = () => {
   const tiktokLink = `https://tiktok.com/@${(store?.tiktok_handle || store?.instagram || "").replace("@", "")}`;
   const telegramLink = `https://t.me/${(store?.telegram_chat_id || "").replace("@", "")}`;
   const facebookLink = `https://m.me/${(store?.facebook || "").replace("@", "")}`;
-  const whatsappLink = store?.whatsapp_phone ? `https://wa.me/${store.whatsapp_phone}` : null;
+  const whatsappLink = store?.whatsapp_phone ? `https://wa.me/${toWaMeDigits(store.whatsapp_phone)}` : null;
 
   const socials = [
     store?.show_instagram && store?.instagram ? { key: "instagram", href: instagramLink } : null,

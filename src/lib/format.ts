@@ -46,6 +46,18 @@ export const statusColor = (status: string): string => {
   return "bg-muted text-muted-foreground";
 };
 
+/** Normalize a phone into bare international digits for wa.me links:
+ *  "+880 1320-836093" and local "01320836093" → "8801320836093".
+ *  Also repairs numbers corrupted by the legacy +7 rewrite. */
+export const toWaMeDigits = (raw: string): string => {
+  const d = raw.replace(/\D/g, "");
+  if (d.startsWith("880")) return d;
+  if (d.startsWith("7801")) return "8" + d.slice(1); // legacy bug turned 880… into 780…
+  if (d.startsWith("0")) return "880" + d.slice(1);
+  if (d.length === 10) return "880" + d; // 1XXXXXXXXX without the trunk zero
+  return d;
+};
+
 /** Order filter types */
 export type OrderFilter = "all" | "new" | "payment" | "shipped";
 

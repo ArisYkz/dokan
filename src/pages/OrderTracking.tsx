@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Check, Clock, Truck, Package, MessageCircle, Copy, Timer, RotateCcw, AlertTriangle, Star, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, toWaMeDigits } from "@/lib/format";
 import { useLabels } from "@/hooks/useLabels";
 import { useTranslation } from "react-i18next";
 import StarRating from "@/components/StarRating";
@@ -229,9 +229,7 @@ const OrderTracking = () => {
           (store.whatsapp_phone || "").replace(/\D/g, "");
         
         if (platform === "whatsapp" && handle) {
-          if (handle.startsWith("8")) handle = "7" + handle.slice(1);
-          if (!handle.startsWith("7") && handle.length === 10) handle = "7" + handle;
-          handle = "+" + handle;
+          handle = toWaMeDigits(handle);
         }
         
         const orderId = order.public_order_id || order.reference_code || order.id.slice(0, 8);

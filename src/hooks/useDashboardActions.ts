@@ -5,6 +5,7 @@ import { updateStoreBranding } from "@/services/storeService";
 import { isSlugOffensive, isSlugReserved } from "@/lib/slugFilter";
 import { normalizeSlug } from "@/lib/normalizeSlug";
 import { ERROR_CODES, useFormatError } from "@/lib/errorCodes";
+import { toWaMeDigits } from "@/lib/format";
 import { FREE_CONFIRMED_LIMIT, OrderStatus } from "@/constants/business";
 import { WALLET_KEYS, walletIsUsable, PAYMENT_METHOD_LABELS } from "@/constants/paymentMethods";
 import { useLabels } from "@/hooks/useLabels";
@@ -183,13 +184,8 @@ export const useDashboardActions = ({
         }
       }
 
-      // Format WhatsApp phone
-      let formattedWhatsapp = brandForm.whatsapp_phone.replace(/\D/g, "");
-      if (formattedWhatsapp.startsWith("8")) {
-        formattedWhatsapp = "7" + formattedWhatsapp.slice(1);
-      } else if (!formattedWhatsapp.startsWith("7") && formattedWhatsapp.length === 10) {
-        formattedWhatsapp = "7" + formattedWhatsapp;
-      }
+      // Normalize WhatsApp number to bare international digits for wa.me links
+      const formattedWhatsapp = toWaMeDigits(brandForm.whatsapp_phone);
 
       // Prepare update data
       const updateData: Record<string, unknown> = {
