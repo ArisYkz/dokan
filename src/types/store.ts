@@ -5,6 +5,7 @@ export interface StoreRow {
   instagram: string | null;
   tiktok_handle: string | null;
   facebook: string | null;
+  youtube: string | null;
   telegram_chat_id: string | null;
   payment_qr_image: string | null;
   is_verified: boolean;
@@ -23,6 +24,7 @@ export interface StoreRow {
   show_instagram: boolean;
   show_tiktok: boolean;
   show_facebook: boolean;
+  show_youtube: boolean;
   show_telegram: boolean;
   show_banner: boolean;
   subscription_status: string;
@@ -119,6 +121,7 @@ export interface BrandFormState {
   instagram: string;
   tiktok_handle: string;
   facebook: string;
+  youtube: string;
   telegram_chat_id: string;
   hero_image_url: string | null;
   hero_title: string;
@@ -132,6 +135,7 @@ export interface BrandFormState {
   show_instagram: boolean;
   show_tiktok: boolean;
   show_facebook: boolean;
+  show_youtube: boolean;
   show_telegram: boolean;
   show_banner: boolean;
   default_language: string;

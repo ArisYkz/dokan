@@ -1,4 +1,4 @@
-import { ShieldAlert, Instagram, Facebook, MessageCircle } from "lucide-react";
+import { ShieldAlert, Instagram, Facebook, MessageCircle, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -29,6 +29,7 @@ const renderIcon = (key: string, className: string) => {
   switch (key) {
     case "instagram": return <Instagram className={className} strokeWidth={1.5} />;
     case "facebook": return <Facebook className={className} strokeWidth={1.5} />;
+    case "youtube": return <Youtube className={className} strokeWidth={1.5} />;
     case "telegram": return <MessageCircle className={className} strokeWidth={1.5} />;
     case "tiktok": return <TikTokIcon className={className} />;
     case "whatsapp": return <WhatsAppIcon className={className} />;

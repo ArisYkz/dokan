@@ -42,6 +42,7 @@ interface StoreData {
   telegram_chat_id: string | null;
   instagram: string | null;
   facebook: string | null;
+  youtube: string | null;
 }
 
 const PAYMENT_WINDOW_MS = 30 * 60 * 1000;
@@ -131,7 +132,7 @@ const OrderTracking = () => {
 
     const { data: storeData } = await supabase
       .from("stores")
-      .select("name, slug, payment_qr_image, is_verified, payment_phone, payment_name, payment_methods, whatsapp_phone, social_platform, telegram_chat_id, instagram, facebook")
+      .select("name, slug, payment_qr_image, is_verified, payment_phone, payment_name, payment_methods, whatsapp_phone, social_platform, telegram_chat_id, instagram, facebook, youtube")
       .eq("id", orderData.store_id)
       .single();
 
@@ -226,6 +227,7 @@ const OrderTracking = () => {
           platform === "telegram" ? (store.telegram_chat_id || "").replace("@", "") :
           platform === "instagram" ? (store.instagram || "").replace("@", "") :
           platform === "facebook" ? (store.facebook || "").replace("@", "") :
+          platform === "youtube" ? (store.youtube || "").replace("@", "") :
           (store.whatsapp_phone || "").replace(/\D/g, "");
         
         if (platform === "whatsapp" && handle) {
@@ -240,6 +242,7 @@ const OrderTracking = () => {
         return platform === "telegram" ? `https://t.me/${handle}` :
                platform === "instagram" ? `https://instagram.com/${handle}` :
                platform === "facebook" ? `https://m.me/${handle}` :
+               platform === "youtube" ? `https://youtube.com/@${handle}` :
                `https://wa.me/${handle}?text=${message}`;
       })()
     : null;
@@ -250,6 +253,7 @@ const OrderTracking = () => {
         return platform === "telegram" ? TRACKING.CONTACT_VIA_TELEGRAM :
                platform === "instagram" ? TRACKING.CONTACT_VIA_INSTAGRAM :
                platform === "facebook" ? TRACKING.CONTACT_VIA_FACEBOOK :
+               platform === "youtube" ? TRACKING.CONTACT_VIA_YOUTUBE :
                TRACKING.CONTACT_VIA_WHATSAPP;
       })()
     : null;

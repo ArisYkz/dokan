@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  AlertTriangle, Facebook, Instagram, MessageCircle, Bell, Crown,
+  AlertTriangle, Facebook, Instagram, MessageCircle, Bell, Crown, Youtube,
   Info, Lock, Check, ChevronDown, Globe, Link as LinkIcon,
   Smartphone, User, Percent, Store, Banknote, Phone,
 } from "lucide-react";
@@ -460,6 +460,23 @@ const BrandingTab = ({
                 onChange={(e) => set("facebook", e.target.value)}
                 className={inputClass}
                 placeholder="@username"
+              />
+            </PlatformRow>
+
+            {/* YouTube */}
+            <PlatformRow
+              icon={<Youtube className="w-3.5 h-3.5" />}
+              name="YouTube"
+              isPrimary={brandForm.social_platform === "youtube"}
+              onSetPrimary={() => set("social_platform", "youtube")}
+              showToggle={brandForm.show_youtube}
+              onToggleShow={() => set("show_youtube", !brandForm.show_youtube)}
+            >
+              <input
+                value={brandForm.youtube}
+                onChange={(e) => set("youtube", e.target.value)}
+                className={inputClass}
+                placeholder="@channel"
               />
             </PlatformRow>
           </SectionCard>
