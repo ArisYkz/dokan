@@ -371,13 +371,15 @@ describe("productService", () => {
     });
 
     it("successfully deletes a product with cascade cleanup", async () => {
-      // deleteProduct makes 4 sequential supabase calls:
+      // deleteProduct makes 5 sequential supabase calls:
       // 1. select product (single)
-      // 2. select product_images
-      // 3. delete product_images
-      // 4. delete product
+      // 2. live-order check on order_items
+      // 3. select product_images
+      // 4. delete product_images
+      // 5. delete product
       const chainResults: any[] = [
         { data: { id: "p1", image_url: "https://img.jpg", store_id: "s1" }, error: null },
+        { data: [], error: null },
         { data: [{ image_url: "https://gallery.jpg" }], error: null },
         { data: null, error: null },
         { data: null, error: null },
@@ -388,6 +390,8 @@ describe("productService", () => {
         const chain: any = {};
         chain.select = vi.fn(() => chain);
         chain.eq = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
         chain.single = vi.fn(() => ({
           then: (onfulfilled: any) =>
             Promise.resolve(chainResults[idx]).then(onfulfilled),
@@ -406,7 +410,107 @@ describe("productService", () => {
       const result = await deleteProduct("p1");
 
       expect(result.success).toBe(true);
-      expect(supabase.from).toHaveBeenCalledTimes(4);
+      expect(supabase.from).toHaveBeenCalledTimes(5);
+    });
+
+    it("blocks deletion when a live order references the product", async () => {
+      const chainResults: any[] = [
+        { data: { id: "p1", image_url: "https://img.jpg", store_id: "s1" }, error: null },
+        { data: [{ product_id: "p1", orders: { status: "new" } }], error: null },
+      ];
+      let callIndex = 0;
+      (supabase.from as any).mockImplementation(() => {
+        const idx = callIndex++;
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.eq = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
+        chain.single = vi.fn(() => ({
+          then: (onfulfilled: any) =>
+            Promise.resolve(chainResults[idx]).then(onfulfilled),
+        }));
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve(chainResults[idx]).then(onfulfilled);
+        chain.delete = vi.fn(() => ({ eq: vi.fn(() => ({ then: vi.fn() })) }));
+        return chain;
+      });
+
+      const result = await deleteProduct("p1");
+
+      expect(result.success).toBe(false);
+      expect(result.isConstraintError).toBe(true);
+      expect(result.message).toContain("existing order records");
+      // No deletion must have been attempted (product fetch + live-order check only)
+      expect(supabase.from).toHaveBeenCalledTimes(2);
+    });
+
+    it("allows deletion when the product is only referenced by dead orders", async () => {
+      const chainResults: any[] = [
+        { data: { id: "p1", image_url: "https://img.jpg", store_id: "s1" }, error: null },
+        // Server already filtered dead statuses out — the check returns nothing
+        { data: [], error: null },
+        { data: null, error: null },
+        { data: null, error: null },
+        { data: null, error: null },
+      ];
+      let callIndex = 0;
+      const notCalls: any[][] = [];
+      (supabase.from as any).mockImplementation(() => {
+        const idx = callIndex++;
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.eq = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn((...args: any[]) => { notCalls.push(args); return chain; });
+        chain.single = vi.fn(() => ({
+          then: (onfulfilled: any) =>
+            Promise.resolve(chainResults[idx]).then(onfulfilled),
+        }));
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve(chainResults[idx]).then(onfulfilled);
+        chain.delete = vi.fn(() => ({
+          eq: vi.fn(() => ({ then: (onfulfilled: any) => Promise.resolve({ data: null, error: null }).then(onfulfilled) })),
+        }));
+        return chain;
+      });
+
+      const result = await deleteProduct("p1");
+
+      expect(result.success).toBe(true);
+      expect(supabase.from).toHaveBeenCalledTimes(5);
+      // The dead-status exclusion filter was part of the live-order query
+      expect(notCalls.some(([col, , vals]) => col === "orders.status" && String(vals).includes("cancelled"))).toBe(true);
+    });
+
+    it("fails closed (blocks) when the live-order check errors", async () => {
+      const chainResults: any[] = [
+        { data: { id: "p1", image_url: "https://img.jpg", store_id: "s1" }, error: null },
+        { data: null, error: new Error("check failed") },
+      ];
+      let callIndex = 0;
+      (supabase.from as any).mockImplementation(() => {
+        const idx = callIndex++;
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.eq = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
+        chain.single = vi.fn(() => ({
+          then: (onfulfilled: any) =>
+            Promise.resolve(chainResults[idx]).then(onfulfilled),
+        }));
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve(chainResults[idx]).then(onfulfilled);
+        chain.delete = vi.fn(() => ({ eq: vi.fn(() => ({ then: vi.fn() })) }));
+        return chain;
+      });
+
+      const result = await deleteProduct("p1");
+
+      expect(result.success).toBe(false);
+      expect(result.isConstraintError).toBe(true);
+      expect(supabase.from).toHaveBeenCalledTimes(2);
     });
 
     it("returns error when product is not found", async () => {
@@ -443,6 +547,8 @@ describe("productService", () => {
         const chain: any = {};
         chain.select = vi.fn(() => chain);
         chain.eq = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
         chain.single = vi.fn(() =>
           idx === 0
             ? {
@@ -532,8 +638,34 @@ describe("productService", () => {
       expect(supabase.from).toHaveBeenCalledWith("products");
     });
 
-    it("returns constraint error code 23503", async () => {
-      mockResponse.error = { code: "23503", message: "foreign key violation" };
+    it("blocks when a live order references one of the products", async () => {
+      // First from() call is the live-order check; it finds a live reference
+      (supabase.from as any).mockImplementationOnce(() => {
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve({ data: [{ product_id: "p1", orders: { status: "paid_confirmed" } }], error: null }).then(onfulfilled);
+        return chain;
+      });
+
+      const result = await bulkDeleteProducts(["p1", "p2"]);
+
+      expect(result.isConstraintError).toBe(true);
+      expect(result.message).toContain("existing order records");
+    });
+
+    it("blocks when the live-order check fails (fail closed)", async () => {
+      (supabase.from as any).mockImplementationOnce(() => {
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve({ data: null, error: new Error("check failed") }).then(onfulfilled);
+        return chain;
+      });
 
       const result = await bulkDeleteProducts(["p1"]);
 
@@ -542,6 +674,17 @@ describe("productService", () => {
     });
 
     it("returns non-constraint errors", async () => {
+      // Live-order check succeeds (no live references)…
+      (supabase.from as any).mockImplementationOnce(() => {
+        const chain: any = {};
+        chain.select = vi.fn(() => chain);
+        chain.in = vi.fn(() => chain);
+        chain.not = vi.fn(() => chain);
+        chain.then = (onfulfilled: any) =>
+          Promise.resolve({ data: [], error: null }).then(onfulfilled);
+        return chain;
+      });
+      // …then the products delete fails with a generic error
       mockResponse.error = new Error("Generic DB error");
 
       const result = await bulkDeleteProducts(["p1"]);

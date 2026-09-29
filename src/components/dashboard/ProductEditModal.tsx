@@ -278,9 +278,11 @@ const ProductEditModal = ({
     if (!editingProduct) return;
     setDeleting(true);
     try {
-      const { error } = await deleteProduct(editingProduct.id);
-      if (error) {
-        toast.error(ERRORS?.DELETE_FAILED || ERRORS?.GENERIC_ERROR || "Failed to delete product");
+      const { success, isConstraintError, message } = await deleteProduct(editingProduct.id);
+      if (!success) {
+        toast.error(isConstraintError
+          ? (message || "Cannot delete: product has existing order records")
+          : (ERRORS?.DELETE_FAILED || ERRORS?.GENERIC_ERROR || "Failed to delete product"));
         setDeleting(false);
         return;
       }

@@ -325,8 +325,8 @@ export const useDashboardActions = ({
       updateProductOptimistic?.(p.id, { _markedForDeletion: true } as any);
     });
     
-    const { error, isConstraintError, message } = await bulkDeleteService(productIds);
-    if (error) {
+    const { error, isConstraintError, message, success } = await bulkDeleteService(productIds);
+    if (error || isConstraintError || success === false) {
       // Rollback - restore products
       previousProducts.forEach(p => {
         updateProductOptimistic?.(p.id, { _markedForDeletion: false } as any);

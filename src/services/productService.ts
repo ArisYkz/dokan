@@ -4,6 +4,33 @@ import { deleteStorageFile, deleteStorageFiles } from "@/lib/storageCleanup";
 import { slugifyProductName } from "@/lib/normalizeSlug";
 
 /**
+ * Order statuses that no longer hold a product: their order_items rows keep
+ * only the name/price snapshot, so a product referenced solely by these can
+ * be deleted (order_items.product_id is set NULL by the FK on delete).
+ * Live orders (new → paid → shipped → delivered) still block deletion.
+ */
+const DEAD_ORDER_STATUSES = ["cancelled", "payment_rejected", "returned", "refunded", "archived"];
+
+/**
+ * Return the ids among `productIds` that are referenced by at least one
+ * live (non-dead) order. Null means the check itself failed — callers
+ * must treat the products as blocked (fail closed, the pre-check is the
+ * only deletion guard left once the FK became ON DELETE SET NULL).
+ */
+const fetchLiveOrderedProductIds = async (productIds: string[]): Promise<string[] | null> => {
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("product_id, orders!inner(status)")
+    .in("product_id", productIds)
+    .not("orders.status", "in", `(${DEAD_ORDER_STATUSES.join(",")})`);
+  if (error) {
+    console.warn("[productService] live-order check failed:", error.message);
+    return null;
+  }
+  return Array.from(new Set((data ?? []).map((r: any) => r.product_id as string)));
+};
+
+/**
  * Generate a store-unique product slug, appending -2, -3, … on collision.
  */
 const ensureUniqueProductSlug = async (storeId: string, baseSlug: string, excludeId?: string): Promise<string> => {
@@ -126,6 +153,18 @@ export const deleteProduct = async (productId: string) => {
         deletedFiles: [],
       };
     }
+
+    // Step 1.5: block deletion while a live order still references the product
+    const liveOrderedIds = await fetchLiveOrderedProductIds([productId]);
+    if (liveOrderedIds === null || liveOrderedIds.includes(productId)) {
+      return {
+        success: false,
+        error: liveOrderedIds === null ? new Error("live-order check failed") : null,
+        isConstraintError: true,
+        message: "Cannot delete: product has existing order records",
+        deletedFiles: [],
+      };
+    }
     
     // Step 2: Fetch all product images (gallery)
     const { data: productImages } = await supabase
@@ -187,7 +226,9 @@ export const deleteProduct = async (productId: string) => {
       .delete()
       .eq("id", productId);
     
-    // Handle foreign key constraint violations
+    // Handle foreign key constraint violations (belt-and-braces: the live-order
+    // pre-check above is the primary guard; a 23503 here means a live order was
+    // placed between the check and the delete)
     if (deleteProductError) {
       if (deleteProductError.code === "23503") {
         return {
@@ -550,9 +591,18 @@ export const bulkUpdateStock = async (productIds: string[], newStock: number) =>
 
 /**
  * Bulk delete products permanently from database.
- * Note: Will fail if any product is referenced in orders (foreign key constraint).
+ * Note: Fails if any product is referenced by a live (non-dead) order.
  */
 export const bulkDeleteProducts = async (productIds: string[]) => {
+  const liveOrderedIds = await fetchLiveOrderedProductIds(productIds);
+  if (liveOrderedIds === null || liveOrderedIds.length > 0) {
+    return {
+      error: liveOrderedIds === null ? new Error("live-order check failed") : null,
+      isConstraintError: true,
+      message: "Cannot delete: one or more products have existing order records",
+    };
+  }
+
   const { error } = await supabase
     .from("products")
     .delete()

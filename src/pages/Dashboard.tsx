@@ -231,9 +231,9 @@ const Dashboard = () => {
   };
 
   const deleteProduct = async (id: string) => {
-    const { error, isConstraintError, message } = await deleteProductService(id);
-    if (error) {
-      // Show specific error for constraint violations
+    const { success, isConstraintError, message } = await deleteProductService(id);
+    if (!success) {
+      // Show specific error for constraint violations (live-order guard)
       if (isConstraintError) {
         toast.error(message || PRODUCTS_TAB.DELETE_CONSTRAINT_ERROR);
       } else {
