@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, X, Image as ImageIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import VariantManager, { type VariantItem } from "@/components/VariantManager";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetOverlay } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ProductRow, ProductFormState } from "@/types/store";
 import { FREE_PRODUCT_LIMIT, FREE_IMAGE_LIMIT, PRO_IMAGE_LIMIT, FREE_CATEGORY_LIMIT } from "@/lib/format";
@@ -112,31 +113,67 @@ const ProductEditModal = ({
 
   const imageLimit = isPro ? PRO_IMAGE_LIMIT : FREE_IMAGE_LIMIT;
 
-  // Reset form when editingProduct changes
+  const emptyForm: ProductFormState = {
+    name: "",
+    price: "",
+    description: "",
+    stock: "",
+    image_url: "",
+    category: "",
+    categoryInput: "",
+    barcode_gtin: "",
+    ntin: "",
+    country_of_origin: "",
+    low_stock_threshold: "3",
+  };
+
+  // Latest values via refs so the reset effect below is keyed only on
+  // [open, editingId] — parent re-renders (new productImages/editingProduct
+  // object identities) must never wipe what the user typed.
+  const editingRef = useRef(editingProduct);
+  editingRef.current = editingProduct;
+  const productImagesRef = useRef(productImages);
+  productImagesRef.current = productImages;
+  const editingId = editingProduct?.id ?? null;
+  const sessionWasEdit = useRef(false);
+
+  const resetForm = () => {
+    setProductForm(emptyForm);
+    setTempProductImages([]);
+    setTempVariants([]);
+    setShowAdvancedInfo(false);
+  };
+
+  // Load product data when the sheet opens for editing. For a new product the
+  // draft is left untouched so it survives close/reopen until it is saved.
+  // Closing an edit session clears the form so a later "Add" starts fresh.
   useEffect(() => {
-    if (editingProduct) {
-      const imgs = productImages[editingProduct.id] || [];
+    if (open) {
+      const p = editingRef.current;
+      sessionWasEdit.current = !!p;
+      if (!p) return;
+      const imgs = productImagesRef.current[p.id] || [];
       setProductForm({
-        name: editingProduct.name,
-        price: editingProduct.price.toString(),
-        description: editingProduct.description || "",
-        stock: editingProduct.stock.toString(),
-        image_url: editingProduct.image_url || "",
-        category: editingProduct.category || "",
+        name: p.name,
+        price: p.price.toString(),
+        description: p.description || "",
+        stock: p.stock.toString(),
+        image_url: p.image_url || "",
+        category: p.category || "",
         categoryInput: "",
-        barcode_gtin: editingProduct.barcode_gtin || "",
-        ntin: editingProduct.ntin || "",
-        country_of_origin: editingProduct.country_of_origin || "",
-        low_stock_threshold: editingProduct.low_stock_threshold?.toString() || "3",
+        barcode_gtin: p.barcode_gtin || "",
+        ntin: p.ntin || "",
+        country_of_origin: p.country_of_origin || "",
+        low_stock_threshold: p.low_stock_threshold?.toString() || "3",
       });
       // Auto-expand advanced info if any fields are filled
-      setShowAdvancedInfo(!!(editingProduct.barcode_gtin || editingProduct.ntin || editingProduct.country_of_origin));
+      setShowAdvancedInfo(!!(p.barcode_gtin || p.ntin || p.country_of_origin));
       // Ensure main image is included
-      const mainImage = editingProduct.image_url;
+      const mainImage = p.image_url;
       const allImages = mainImage && !imgs.includes(mainImage) ? [mainImage, ...imgs] : imgs;
       setTempProductImages(allImages);
       // Fetch variants
-      fetchProductVariants(editingProduct.id)
+      fetchProductVariants(p.id)
         .then((vars) => {
           setTempVariants(vars.map((v) => ({
             variant_type: v.variant_type,
@@ -148,26 +185,12 @@ const ProductEditModal = ({
           console.error("Failed to fetch product variants:", error);
           setTempVariants([]);
         });
-    } else {
-      // New product
-      setProductForm({
-        name: "",
-        price: "",
-        description: "",
-        stock: "",
-        image_url: "",
-        category: "",
-        categoryInput: "",
-        barcode_gtin: "",
-        ntin: "",
-        country_of_origin: "",
-        low_stock_threshold: "3",
-      });
-      setTempProductImages([]);
-      setTempVariants([]);
-      setShowAdvancedInfo(false);
+    } else if (sessionWasEdit.current) {
+      sessionWasEdit.current = false;
+      resetForm();
     }
-  }, [editingProduct, productImages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editingId]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,6 +264,8 @@ const ProductEditModal = ({
       );
 
       setLoading(false);
+      // A saved product clears the add-flow draft ("remember input until upload")
+      if (!editingProduct) resetForm();
       onOpenChange(false);
       onSave();
     } catch (error) {
@@ -614,18 +639,22 @@ const ProductEditModal = ({
           variant="danger"
         />
       )}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center cursor-zoom-out"
+      {/* Lightbox — nested Dialog so clicks don't dismiss the product sheet */}
+      <Dialog open={!!lightboxImage} onOpenChange={(open) => { if (!open) setLightboxImage(null); }}>
+        <DialogContent
+          className="w-auto max-w-[95vw] border-0 bg-transparent p-0"
           onClick={() => setLightboxImage(null)}
         >
-          <img
-            src={lightboxImage}
-            alt=""
-            className="max-w-[95vw] max-h-[95vh] object-contain"
-          />
-        </div>
-      )}
+          <DialogTitle className="sr-only">{PRODUCT.PRODUCT_IMAGES}</DialogTitle>
+          {lightboxImage && (
+            <img
+              src={lightboxImage}
+              alt=""
+              className="max-w-[95vw] max-h-[85vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 };

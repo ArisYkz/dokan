@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 import Cropper, { type Area } from "react-easy-crop";
 import { Upload, X, Loader2, Crop } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ERROR_CODES } from "@/lib/errorCodes";
@@ -169,11 +169,14 @@ const ImageCropUpload = ({
 
   return (
     <div className={className}>
-      {/* Crop modal */}
-      {cropSrc && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-sm w-full max-w-lg overflow-hidden">
-            <div className="relative h-72 md:h-96 bg-muted">
+      {/* Crop modal — nested Radix Dialog so it stays clickable and doesn't
+          dismiss an outer Sheet (a raw portaled div counts as "outside" and
+          closes the parent product sheet) */}
+      <Dialog open={!!cropSrc} onOpenChange={(open) => { if (!open) setCropSrc(null); }}>
+        <DialogContent className="bg-card p-0 gap-0 w-full max-w-lg overflow-hidden">
+          <DialogTitle className="sr-only">{resolvedLabel}</DialogTitle>
+          <div className="relative h-72 md:h-96 bg-muted">
+            {cropSrc && (
               <Cropper
                 image={cropSrc}
                 crop={crop}
@@ -183,43 +186,42 @@ const ImageCropUpload = ({
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
               />
+            )}
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">Zoom</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="flex-1 accent-primary"
+              />
             </div>
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground">Zoom</span>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.1}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="flex-1 accent-primary"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleCropConfirm}
-                  disabled={uploading || optimizing || !croppedArea}
-                  className="flex-1 bg-primary text-primary-foreground py-2.5 text-sm tracking-wide uppercase rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {(uploading || optimizing) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crop className="w-4 h-4" />}
-                  {optimizing ? IMAGE_UPLOAD.OPTIMIZING : uploading ? IMAGE_UPLOAD.UPLOADING : IMAGE_UPLOAD.CROP_UPLOAD}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCropSrc(null)}
-                  className="px-4 py-2.5 text-sm border border-border rounded-sm hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCropConfirm}
+                disabled={uploading || optimizing || !croppedArea}
+                className="flex-1 bg-primary text-primary-foreground py-2.5 text-sm tracking-wide uppercase rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {(uploading || optimizing) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crop className="w-4 h-4" />}
+                {optimizing ? IMAGE_UPLOAD.OPTIMIZING : uploading ? IMAGE_UPLOAD.UPLOADING : IMAGE_UPLOAD.CROP_UPLOAD}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCropSrc(null)}
+                className="px-4 py-2.5 text-sm border border-border rounded-sm hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        </div>,
-        document.body,
-      )}
+        </DialogContent>
+      </Dialog>
 
       {value ? (
         <div className="relative group">

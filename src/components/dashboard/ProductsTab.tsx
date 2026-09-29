@@ -29,7 +29,7 @@ import {
   bulkUpdateStock as bulkUpdateStockService,
   bulkDeleteProducts as bulkDeleteService,
 } from "@/services/productService";
-import { saveCategories } from "@/services/categoryService";
+import { saveCategories, fetchCategories } from "@/services/categoryService";
 import { useDashboardActions } from "@/hooks/useDashboardActions";
 
 interface ProductsTabProps {
@@ -54,7 +54,7 @@ const ProductsTab = ({
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductRow | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<'default' | 'price-asc' | 'price-desc' | 'date-asc' | 'date-desc'>('default');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -99,6 +99,21 @@ const ProductsTab = ({
     products.forEach((product) => { if (product.category && product.category.trim()) cats.add(product.category.trim()); });
     return Array.from(cats).sort();
   }, [products]);
+
+  // Categories live in the DB; a freshly added category has no products yet,
+  // so deriving the list from products alone would drop it on every reload.
+  useEffect(() => {
+    let alive = true;
+    fetchCategories(storeId)
+      .then((cats) => { if (alive) setDbCategories(cats); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [storeId]);
+
+  const categories = useMemo(
+    () => Array.from(new Set([...dbCategories, ...existingCategories])).sort(),
+    [dbCategories, existingCategories],
+  );
 
   const searchedProducts = useMemo(() => {
     if (!debouncedSearchTerm.trim()) return products;
@@ -182,10 +197,6 @@ const ProductsTab = ({
       }
     },
   });
-
-  useEffect(() => {
-    setCategories([...existingCategories].sort());
-  }, [existingCategories]);
 
   const handleAddProduct = () => {
     if (!isPro && products.length >= FREE_PRODUCT_LIMIT) { onShowUpgrade(); return; }
@@ -380,8 +391,8 @@ const ProductsTab = ({
         isPro={isPro}
         categories={categories}
         productCount={products.length}
-        onCategoryAdded={(category) => setCategories((prev) => Array.from(new Set([...prev, category])).sort())}
-        onCategoryDeleted={(category) => setCategories((prev) => prev.filter((c) => c !== category))}
+        onCategoryAdded={(category) => setDbCategories((prev) => Array.from(new Set([...prev, category])).sort())}
+        onCategoryDeleted={(category) => setDbCategories((prev) => prev.filter((c) => c !== category))}
         onShowUpgrade={onShowUpgrade}
         onSave={onReload}
         productImages={Object.fromEntries(
@@ -395,7 +406,7 @@ const ProductsTab = ({
           userId={userId}
           existingCategories={categories}
           isPro={isPro}
-          onCategoryAdded={(category) => setCategories((prev) => Array.from(new Set([...prev, category])).sort())}
+          onCategoryAdded={(category) => setDbCategories((prev) => Array.from(new Set([...prev, category])).sort())}
           onCancel={() => setShowBulkUpload(false)}
           onComplete={() => { setShowBulkUpload(false); setShowProductForm(false); onReload(); }}
           onShowUpgrade={onShowUpgrade}

@@ -410,18 +410,17 @@ const Dashboard = () => {
 
             return (
               <div>
-                {isMobile ? (
-                  <div className="container py-4">
-                    <StoreStatsWidget store={store} orders={orders} />
-                    {tabContent}
-                  </div>
-                ) : (
-                  <div className="container py-8">
-                    <StoreStatsWidget store={store} orders={orders} />
+                {/* Same tree at every breakpoint — swapping the container on
+                    isMobile remounts ProductsTab and destroys the open product
+                    sheet (F12 device-mode toggle bug). Tab bar is hidden via
+                    CSS on mobile instead. */}
+                <div className="container py-4 md:py-8">
+                  <StoreStatsWidget store={store} orders={orders} />
+                  <div className="hidden md:block">
                     <DashboardTabs tab={tab} setTab={setTab} productCount={products.length} activeOrderCount={activeOrderCount} archivedOrderCount={archivedOrderCount} isPro={isPro} />
-                    {tabContent}
                   </div>
-                )}
+                  {tabContent}
+                </div>
               </div>
             );
           })()}
