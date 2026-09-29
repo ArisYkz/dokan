@@ -209,13 +209,24 @@ Deno.serve(async (req) => {
 
     const { data: store } = await supabase
       .from('stores')
-      .select('telegram_chat_id, name, plan_type')
+      .select('telegram_chat_id, name, plan_type, user_id')
       .eq('id', order.store_id)
       .single();
 
     console.log('notify-order store info:', JSON.stringify(store));
     const proPlans = ['standard', 'pro', 'pro_monthly', 'pro_year'];
-    if (!store || !proPlans.includes(store.plan_type)) return ok({ success: true, message: 'Not a Pro plan, skipped' });
+    // Pro is per-user in the dashboard (profiles.plan_type) but the Telegram
+    // approval flow writes stores.plan_type — admin-dashboard upgrades never
+    // touch the store row, so a store is Pro if EITHER source grants it.
+    // Profile subscriptions honor expiry; store rows don't carry a live one.
+    const isProPlan = (plan?: string | null, expiry?: string | null) =>
+      !!plan && proPlans.includes(plan) && (!expiry || new Date(expiry) > new Date());
+    const { data: ownerProfile } = store?.user_id
+      ? await supabase.from('profiles').select('plan_type, subscription_expiry').eq('user_id', store.user_id).maybeSingle()
+      : { data: null };
+    if (!store || (!isProPlan(store.plan_type) && !isProPlan(ownerProfile?.plan_type, ownerProfile?.subscription_expiry))) {
+      return ok({ success: true, message: 'Not a Pro plan, skipped' });
+    }
     if (!store.telegram_chat_id) return ok({ success: true, message: 'No Telegram connected' });
 
     const pii = {

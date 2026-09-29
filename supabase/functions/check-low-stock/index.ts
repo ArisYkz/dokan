@@ -47,12 +47,20 @@ Deno.serve(async (req) => {
       // Fetch store telegram_chat_id and plan_type
       const { data: store } = await supabase
         .from('stores')
-        .select('telegram_chat_id, plan_type, name')
+        .select('telegram_chat_id, plan_type, name, user_id')
         .eq('id', storeId)
         .single();
 
       if (!store?.telegram_chat_id) continue;
-      if (!['standard', 'pro', 'pro_monthly', 'pro_month', 'pro_year'].includes(store.plan_type)) continue;
+      // Pro is per-user in the dashboard (profiles.plan_type) but the Telegram
+      // approval flow writes stores.plan_type — check BOTH sources.
+      const proPlans = ['standard', 'pro', 'pro_monthly', 'pro_month', 'pro_year'];
+      const isProPlan = (plan?: string | null, expiry?: string | null) =>
+        !!plan && proPlans.includes(plan) && (!expiry || new Date(expiry) > new Date());
+      const { data: ownerProfile } = store.user_id
+        ? await supabase.from('profiles').select('plan_type, subscription_expiry').eq('user_id', store.user_id).maybeSingle()
+        : { data: null };
+      if (!isProPlan(store.plan_type) && !isProPlan(ownerProfile?.plan_type, ownerProfile?.subscription_expiry)) continue;
       if (!TELEGRAM_URL) continue;
 
       // Build message
