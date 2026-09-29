@@ -832,6 +832,7 @@ export type Database = {
           tax_enabled: boolean | null
           tax_percent: number | null
           telegram_chat_id: string | null
+          telegram_username: string | null
           theme_preset: string | null
           tiktok_handle: string | null
           total_earned: number | null
@@ -878,6 +879,7 @@ export type Database = {
           tax_enabled?: boolean | null
           tax_percent?: number | null
           telegram_chat_id?: string | null
+          telegram_username?: string | null
           theme_preset?: string | null
           tiktok_handle?: string | null
           total_earned?: number | null
@@ -924,6 +926,7 @@ export type Database = {
           tax_enabled?: boolean | null
           tax_percent?: number | null
           telegram_chat_id?: string | null
+          telegram_username?: string | null
           theme_preset?: string | null
           tiktok_handle?: string | null
           total_earned?: number | null

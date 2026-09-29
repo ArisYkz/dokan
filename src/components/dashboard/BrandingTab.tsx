@@ -439,10 +439,10 @@ const BrandingTab = ({
               onToggleShow={() => set("show_telegram", !brandForm.show_telegram)}
             >
               <input
-                value={brandForm.telegram_chat_id}
-                onChange={(e) => set("telegram_chat_id", e.target.value)}
+                value={brandForm.telegram_username}
+                onChange={(e) => set("telegram_username", e.target.value)}
                 className={inputClass}
-                placeholder="@channel or Chat ID"
+                placeholder="@username"
               />
             </PlatformRow>
 

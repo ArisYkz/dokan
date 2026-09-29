@@ -7,6 +7,7 @@ export interface StoreRow {
   facebook: string | null;
   youtube: string | null;
   telegram_chat_id: string | null;
+  telegram_username: string | null;
   payment_qr_image: string | null;
   is_verified: boolean;
   hero_image_url: string | null;
@@ -123,6 +124,7 @@ export interface BrandFormState {
   facebook: string;
   youtube: string;
   telegram_chat_id: string;
+  telegram_username: string;
   hero_image_url: string | null;
   hero_title: string;
   hero_subtitle: string;

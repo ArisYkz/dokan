@@ -166,7 +166,7 @@ const StoreFront = () => {
 
   const instagramLink = `https://instagram.com/${(store?.instagram || "").replace("@", "")}`;
   const tiktokLink = `https://tiktok.com/@${(store?.tiktok_handle || store?.instagram || "").replace("@", "")}`;
-  const telegramLink = `https://t.me/${(store?.telegram_chat_id || "").replace("@", "")}`;
+  const telegramLink = `https://t.me/${(store?.telegram_username || "").replace("@", "")}`;
   const facebookLink = `https://m.me/${(store?.facebook || "").replace("@", "")}`;
   const youtubeLink = `https://youtube.com/@${(store?.youtube || "").replace("@", "")}`;
   const whatsappLink = store?.whatsapp_phone ? `https://wa.me/${toWaMeDigits(store.whatsapp_phone)}` : null;
@@ -174,7 +174,7 @@ const StoreFront = () => {
   const socials = [
     store?.show_instagram && store?.instagram ? { key: "instagram", href: instagramLink } : null,
     store?.show_tiktok && store?.tiktok_handle ? { key: "tiktok", href: tiktokLink } : null,
-    store?.show_telegram && store?.telegram_chat_id ? { key: "telegram", href: telegramLink } : null,
+    store?.show_telegram && store?.telegram_username ? { key: "telegram", href: telegramLink } : null,
     store?.show_facebook && store?.facebook ? { key: "facebook", href: facebookLink } : null,
     store?.show_youtube && store?.youtube ? { key: "youtube", href: youtubeLink } : null,
     whatsappLink ? { key: "whatsapp", href: whatsappLink } : null,

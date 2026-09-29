@@ -197,6 +197,7 @@ export const useDashboardActions = ({
         youtube: brandForm.youtube,
         show_youtube: brandForm.show_youtube,
         telegram_chat_id: brandForm.telegram_chat_id,
+        telegram_username: brandForm.telegram_username,
         whatsapp_phone: formattedWhatsapp,
         hero_image_url: brandForm.hero_image_url,
         hero_title: brandForm.hero_title,

@@ -30,7 +30,7 @@ const SuccessPage = () => {
         setOrder({ ...orderData, order_items: orderItems || [] });
         supabase
           .from("stores")
-          .select("name, whatsapp_phone, social_platform, telegram_chat_id, instagram, facebook, youtube")
+          .select("name, whatsapp_phone, social_platform, telegram_username, instagram, facebook, youtube")
           .eq("id", orderData.store_id)
           .single()
           .then(({ data: storeData }) => {
@@ -45,7 +45,7 @@ const SuccessPage = () => {
     ? (() => {
         const platform = store.social_platform || "whatsapp";
         let handle =
-          platform === "telegram" ? (store.telegram_chat_id || "").replace("@", "") :
+          platform === "telegram" ? (store.telegram_username || "").replace("@", "") :
           platform === "instagram" ? (store.instagram || "").replace("@", "") :
           platform === "facebook" ? (store.facebook || "").replace("@", "") :
           platform === "youtube" ? (store.youtube || "").replace("@", "") :

@@ -39,7 +39,7 @@ interface StoreData {
   payment_methods: unknown;
   whatsapp_phone: string | null;
   social_platform: string | null;
-  telegram_chat_id: string | null;
+  telegram_username: string | null;
   instagram: string | null;
   facebook: string | null;
   youtube: string | null;
@@ -132,7 +132,7 @@ const OrderTracking = () => {
 
     const { data: storeData } = await supabase
       .from("stores")
-      .select("name, slug, payment_qr_image, is_verified, payment_phone, payment_name, payment_methods, whatsapp_phone, social_platform, telegram_chat_id, instagram, facebook, youtube")
+      .select("name, slug, payment_qr_image, is_verified, payment_phone, payment_name, payment_methods, whatsapp_phone, social_platform, telegram_username, instagram, facebook, youtube")
       .eq("id", orderData.store_id)
       .single();
 
@@ -224,7 +224,7 @@ const OrderTracking = () => {
     ? (() => {
         const platform = store.social_platform || "whatsapp";
         let handle =
-          platform === "telegram" ? (store.telegram_chat_id || "").replace("@", "") :
+          platform === "telegram" ? (store.telegram_username || "").replace("@", "") :
           platform === "instagram" ? (store.instagram || "").replace("@", "") :
           platform === "facebook" ? (store.facebook || "").replace("@", "") :
           platform === "youtube" ? (store.youtube || "").replace("@", "") :

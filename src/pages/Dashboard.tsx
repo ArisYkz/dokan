@@ -111,7 +111,7 @@ const Dashboard = () => {
   const [storeForm, setStoreForm] = useState({ name: "", slug: "", instagram: "" });
 
   const [brandForm, setBrandForm] = useState<BrandFormState>({
-    name: "", slug: "", instagram: "", tiktok_handle: "", telegram_chat_id: "", facebook: "",
+    name: "", slug: "", instagram: "", tiktok_handle: "", telegram_chat_id: "", telegram_username: "", facebook: "",
     hero_image_url: null, hero_title: "", hero_subtitle: "", logo_url: null,
     payment_qr_image: null,
     payment_phone: "", payment_name: "",
@@ -137,6 +137,7 @@ const Dashboard = () => {
       tiktok_handle: store.tiktok_handle || "",
       facebook: store.facebook || "",
       telegram_chat_id: store.telegram_chat_id || "",
+      telegram_username: store.telegram_username || "",
       hero_image_url: store.hero_image_url || null,
       hero_title: store.hero_title || "",
       hero_subtitle: store.hero_subtitle || "",
