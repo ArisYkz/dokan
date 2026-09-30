@@ -32,12 +32,12 @@ const StoreHero = ({ store }: StoreHeroProps) => {
           >
             <div className="w-full">
               {store.hero_title && (
-                <h2 className="font-mono text-2xl md:text-4xl font-bold uppercase leading-tight" style={{ color: "hsl(var(--foreground))" }}>
+                <h2 className="font-mono text-2xl md:text-4xl font-bold uppercase leading-tight line-clamp-2" style={{ color: "hsl(var(--foreground))" }}>
                   {store.hero_title}
                 </h2>
               )}
               {store.hero_subtitle && (
-                <p className="font-mono text-[11px] md:text-xs uppercase tracking-[0.15em] mt-2 max-w-[320px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <p className="font-mono text-[11px] md:text-xs uppercase tracking-[0.15em] mt-2 max-w-[320px] line-clamp-3" style={{ color: "hsl(var(--muted-foreground))" }}>
                   {store.hero_subtitle}
                 </p>
               )}
@@ -51,12 +51,12 @@ const StoreHero = ({ store }: StoreHeroProps) => {
   return (
     <section className="container py-6 md:py-10 border-b border-border/5">
       {store.hero_title && (
-        <h2 className="font-mono text-2xl md:text-4xl font-bold uppercase leading-tight" style={{ color: "hsl(var(--foreground))" }}>
+        <h2 className="font-mono text-2xl md:text-4xl font-bold uppercase leading-tight line-clamp-2" style={{ color: "hsl(var(--foreground))" }}>
           {store.hero_title}
         </h2>
       )}
       {store.hero_subtitle && (
-        <p className="font-mono text-[11px] md:text-xs uppercase" style={{ color: "hsl(var(--muted-foreground))" }}>
+        <p className="font-mono text-[11px] md:text-xs uppercase line-clamp-3" style={{ color: "hsl(var(--muted-foreground))" }}>
           {store.hero_subtitle}
         </p>
       )}

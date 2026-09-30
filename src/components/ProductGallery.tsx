@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
@@ -6,9 +6,6 @@ interface ProductGalleryProps {
   images: string[];
   productName: string;
 }
-
-const ZOOM = 2.5;
-const LENS = 160;
 
 const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -79,34 +76,15 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
   );
 };
 
-/** Single image with loading skeleton, fade-in, and cursor-following zoom lens */
+/** Single image with loading skeleton and fade-in */
 const ZoomableImage = ({ src, alt, blurSrc }: { src: string; alt: string; blurSrc?: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
-  const [lens, setLens] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => { setStatus("loading"); }, [src]);
 
-  const handleMove = useCallback((e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const half = LENS / 2;
-    setLens({
-      x: Math.min(Math.max(x, half), rect.width - half),
-      y: Math.min(Math.max(y, half), rect.height - half),
-    });
-  }, []);
-
-  const handleLeave = useCallback(() => setLens(null), []);
-
   return (
     <div
-      ref={containerRef}
-      className="relative flex items-center justify-center overflow-hidden cursor-crosshair min-h-[30vh]"
-      onMouseMove={status === "loaded" ? handleMove : undefined}
-      onMouseLeave={handleLeave}
+      className="relative flex items-center justify-center overflow-hidden min-h-[30vh]"
     >
       {/* Blurred background — uses blurSrc (first image) if provided, else self */}
       <div className="absolute inset-0 scale-110" aria-hidden="true">
@@ -143,23 +121,6 @@ const ZoomableImage = ({ src, alt, blurSrc }: { src: string; alt: string; blurSr
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
       />
-
-      {/* Zoom lens */}
-      {lens && status === "loaded" && (
-        <div
-          className="absolute pointer-events-none border-2 border-white/60 shadow-lg"
-          style={{
-            width: LENS,
-            height: LENS,
-            left: lens.x - LENS / 2,
-            top: lens.y - LENS / 2,
-            backgroundImage: `url(${src})`,
-            backgroundSize: `${ZOOM * 100}%`,
-            backgroundPosition: `${(lens.x / (containerRef.current?.offsetWidth || 1)) * 100}% ${(lens.y / (containerRef.current?.offsetHeight || 1)) * 100}%`,
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-      )}
     </div>
   );
 };

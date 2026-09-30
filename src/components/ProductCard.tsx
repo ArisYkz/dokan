@@ -80,7 +80,7 @@ const ProductCard = memo(({ product, index, onSelect, onQuickAdd, isPaused }: Pr
             <span className="font-mono text-[11px] text-muted-foreground">
               {product.stock > 0 ? `× ${product.stock}` : 'Sold out'}
             </span>
-            <span className="font-mono text-xs md:text-sm text-[hsl(var(--highlight))]">
+            <span className="font-mono text-sm md:text-base font-semibold text-[hsl(var(--highlight))]">
               {formatPrice(product.price)}
             </span>
           </div>

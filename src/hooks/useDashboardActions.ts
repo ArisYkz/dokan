@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { updateOrderStatus as updateOrderStatusService, resolvePaymentAttempts } from "@/services/orderService";
+import { updateOrderStatus as updateOrderStatusService, resolvePaymentAttempts, deleteOrders as deleteOrdersService } from "@/services/orderService";
 import { updateStoreBranding } from "@/services/storeService";
 import { isSlugOffensive, isSlugReserved } from "@/lib/slugFilter";
 import { normalizeSlug } from "@/lib/normalizeSlug";
@@ -95,6 +95,21 @@ export const useDashboardActions = ({
 
     return true;
   }, [isPro, orders, totalConfirmed, updateOrderOptimistic, rollbackOrder, reload, MESSAGES, ERRORS, PRODUCTS_TAB]);
+
+  /**
+   * Permanently delete orders (e.g. "Clear archive") with toast feedback.
+   */
+  const deleteOrders = useCallback(async (orderIds: string[]) => {
+    if (orderIds.length === 0) return false;
+    const { error } = await deleteOrdersService(orderIds);
+    if (error) {
+      toast.error(ERRORS?.GENERIC_ERROR || error.message);
+      return false;
+    }
+    toast.success(orderIds.length > 1 ? "Orders deleted" : "Order deleted");
+    reload();
+    return true;
+  }, [ERRORS, reload]);
 
   /**
    * Export orders to CSV file.
@@ -417,6 +432,7 @@ export const useDashboardActions = ({
 
   return {
     updateOrderStatus,
+    deleteOrders,
     exportCSV,
     saveBranding,
     createStore,

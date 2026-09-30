@@ -17,13 +17,14 @@ interface OrdersTabProps {
   onStatusChange: (orderId: string, newStatus: string) => void;
   onCancelConfirm: (orderId: string, newStatus: string) => void;
   onArchive: (orderId: string) => void;
+  onDownloadInvoice?: (order: OrderRow) => void;
   onExportCSV: () => void;
   onCreateOrder?: () => void;
   revenueLimitReached?: boolean;
   isPro?: boolean;
 }
 
-const OrdersTab = React.memo(({ orders, filteredOrders, orderFilter, setOrderFilter, orderSearch, setOrderSearch, onStatusChange, onCancelConfirm, onArchive, onExportCSV, onCreateOrder, revenueLimitReached, isPro = false }: OrdersTabProps) => {
+const OrdersTab = React.memo(({ orders, filteredOrders, orderFilter, setOrderFilter, orderSearch, setOrderSearch, onStatusChange, onCancelConfirm, onArchive, onDownloadInvoice, onExportCSV, onCreateOrder, revenueLimitReached, isPro = false }: OrdersTabProps) => {
   const { ORDERS_TAB, MANUAL_ORDER, ORDER_FILTER_LABELS } = useLabels();
 
   const ORDER_FILTERS: { key: OrderFilter; label: string }[] = [
@@ -109,7 +110,7 @@ const OrdersTab = React.memo(({ orders, filteredOrders, orderFilter, setOrderFil
       ) : (
         <div className="space-y-2 md:space-y-4">
           {filteredOrders.map((order) => (
-            <OrderCard key={order.id} order={order} variant="active" onStatusChange={onStatusChange} onCancelConfirm={onCancelConfirm} onArchive={onArchive} revenueLimitReached={revenueLimitReached} />
+            <OrderCard key={order.id} order={order} variant="active" onStatusChange={onStatusChange} onCancelConfirm={onCancelConfirm} onArchive={onArchive} onDownloadInvoice={onDownloadInvoice} revenueLimitReached={revenueLimitReached} />
           ))}
         </div>
       )}

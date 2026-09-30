@@ -93,7 +93,7 @@ export interface OrderRow {
   promo_code: string | null;
   discount_amount: number;
   payment_method: string | null;
-  order_items: { product_name: string; quantity: number; product_price: number }[];
+  order_items: { product_id: string | null; product_name: string; quantity: number; product_price: number }[];
 }
 
 export interface Product {

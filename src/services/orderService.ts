@@ -26,6 +26,14 @@ export const resolvePaymentAttempts = async (orderId: string, status: string) =>
 };
 
 /**
+ * Permanently delete orders (and their items via cascade). Used by "Clear archive".
+ */
+export const deleteOrders = async (orderIds: string[]) => {
+  const { error } = await supabase.from("orders").delete().in("id", orderIds);
+  return { error };
+};
+
+/**
  * Fetch orders for a store with order_items (legacy, use fetchStoreOrdersWithContacts instead).
  * @deprecated Use fetchStoreOrdersWithContacts for better performance
  */

@@ -412,6 +412,11 @@ const en: TranslationMap = {
   ARCHIVE_TAB: {
     TITLE: "Archive", NO_SEARCH_RESULTS: "No search results found",
     NO_ARCHIVED: "No archived orders",
+    CLEAR_ALL: "Clear all",
+    CLEAR_CONFIRM_TITLE: "Clear archive?",
+    CLEAR_CONFIRM_MSG: "Permanently delete all archived orders? This cannot be undone.",
+    DELETE_CONFIRM_TITLE: "Delete order?",
+    DELETE_CONFIRM_MSG: "Permanently delete this order? This cannot be undone.",
   },
   ANALYTICS: {
     TITLE: "STATISTICS", REVENUE: "Revenue", PENDING: "Pending",
@@ -1074,6 +1079,11 @@ const bn: TranslationMap = {
   ARCHIVE_TAB: {
     TITLE: "আর্কাইভ", NO_SEARCH_RESULTS: "কোনো অনুসন্ধান ফলাফল পাওয়া যায়নি",
     NO_ARCHIVED: "কোনো আর্কাইভ করা অর্ডার নেই",
+    CLEAR_ALL: "সব মুছুন",
+    CLEAR_CONFIRM_TITLE: "আর্কাইভ খালি করবেন?",
+    CLEAR_CONFIRM_MSG: "আর্কাইভ করা সব অর্ডার স্থায়ীভাবে মুছে ফেলবেন? এটি ফেরানো যাবে না।",
+    DELETE_CONFIRM_TITLE: "অর্ডার মুছে ফেলবেন?",
+    DELETE_CONFIRM_MSG: "এই অর্ডারটি স্থায়ীভাবে মুছে ফেলবেন? এটি ফেরানো যাবে না।",
   },
   ANALYTICS: {
     TITLE: "পরিসংখ্যান", REVENUE: "আয়", PENDING: "বাকি",

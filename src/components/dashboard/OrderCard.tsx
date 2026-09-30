@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link2, MessageCircle, Archive, Loader2, ChevronDown } from "lucide-react";
+import { Link2, MessageCircle, Archive, Loader2, ChevronDown, FileDown, Trash2 } from "lucide-react";
 import type { OrderRow } from "@/types/store";
 import { formatPrice, statusColor } from "@/lib/format";
+import { CONFIRMED_STATUSES } from "@/constants/business";
 import { useLabels } from "@/hooks/useLabels";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -13,10 +14,12 @@ interface OrderCardProps {
   onStatusChange?: (orderId: string, newStatus: string) => void;
   onCancelConfirm?: (orderId: string, newStatus: string) => void;
   onArchive?: (orderId: string) => void;
+  onDelete?: (orderId: string) => void;
+  onDownloadInvoice?: (order: OrderRow) => void;
   revenueLimitReached?: boolean;
 }
 
-const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm, onArchive, revenueLimitReached }: OrderCardProps) => {
+const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm, onArchive, onDelete, onDownloadInvoice, revenueLimitReached }: OrderCardProps) => {
   const { STATUS_LABELS, STATUS_TOOLTIPS } = useLabels();
   const [processing, setProcessing] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -202,6 +205,35 @@ const OrderCard = React.memo(({ order, variant, onStatusChange, onCancelConfirm,
             <a href={`/order/${order.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground hover:text-foreground transition-colors">
               <Link2 className="w-3 h-3" /> Tracking
             </a>
+
+            {onDownloadInvoice && CONFIRMED_STATUSES.includes(order.status) && (
+              <button
+                onClick={() => {
+                  const now = Date.now();
+                  if (now - lastActionRef.current < 800) return;
+                  lastActionRef.current = now;
+                  onDownloadInvoice(order);
+                }}
+                className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FileDown className="w-3 h-3" /> Invoice
+              </button>
+            )}
+
+            {isArchived && onDelete && (
+              <button
+                onClick={() => {
+                  const now = Date.now();
+                  if (now - lastActionRef.current < 800) return;
+                  lastActionRef.current = now;
+                  onDelete(order.id);
+                }}
+                className="flex items-center gap-1 text-[10px] md:text-xs text-destructive/70 hover:text-destructive transition-colors"
+                title="Delete permanently"
+              >
+                <Trash2 className="w-3 h-3" /> Delete
+              </button>
+            )}
 
             {!isArchived && onArchive && !["archived", "delivered", "cancelled", "returned", "refunded"].includes(order.status) && (
               <button

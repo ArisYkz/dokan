@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useStoreData } from "@/hooks/useStoreData";
 import { useDashboardActions } from "@/hooks/useDashboardActions";
-import type { BrandFormState } from "@/types/store";
+import type { BrandFormState, OrderRow } from "@/types/store";
 import {
   formatPrice, ARCHIVED_STATUSES, filterStatuses, filterOrdersBySearch,
   type OrderFilter,
@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { isSlugOffensive } from "@/lib/slugFilter";
 import { createStore as createStoreService } from "@/services/storeService";
 import { deleteProduct as deleteProductService } from "@/services/productService";
+import { downloadInvoicePdf } from "@/lib/invoice";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardTabs, { type DashboardTab } from "@/components/dashboard/DashboardTabs";
@@ -57,7 +58,7 @@ const ProOnlyGate = ({ onUpgrade }: { onUpgrade: () => void }) => {
 };
 
 const Dashboard = () => {
-  const { MESSAGES, CONFIRM, CSV_HEADERS, AUTH, ACTIONS, PRODUCTS_TAB, ERRORS, DASHBOARD_BANNERS } = useLabels();
+  const { MESSAGES, CONFIRM, CSV_HEADERS, AUTH, ACTIONS, PRODUCTS_TAB, ERRORS, DASHBOARD_BANNERS, ARCHIVE_TAB } = useLabels();
   const { t } = useTranslation();
   const formatError = useFormatError();
   const { dark } = useTheme();
@@ -107,6 +108,8 @@ const Dashboard = () => {
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [orderSearch, setOrderSearch] = useState("");
   const [archiveSearch, setArchiveSearch] = useState("");
+  const [clearArchiveConfirm, setClearArchiveConfirm] = useState(false);
+  const [archiveDeleteId, setArchiveDeleteId] = useState<string | null>(null);
 
   const [storeForm, setStoreForm] = useState({ name: "", slug: "", instagram: "" });
 
@@ -179,7 +182,7 @@ const Dashboard = () => {
   }, [orders]);
 
   // Use centralized dashboard actions hook
-  const { updateOrderStatus, exportCSV, saveBranding: saveBrandingAction, createStore: createStoreAction } = useDashboardActions({
+  const { updateOrderStatus, deleteOrders, exportCSV, saveBranding: saveBrandingAction, createStore: createStoreAction } = useDashboardActions({
     isPro,
     orders,
     totalConfirmed,
@@ -205,6 +208,20 @@ const Dashboard = () => {
   }, [searchParams, setSearchParams, updateOrderStatus, user]);
 
   const storeTaxPercent = store?.tax_enabled ? store.tax_percent : 0;
+
+  const handleDownloadInvoice = useCallback((order: OrderRow) => {
+    if (!store) return;
+    toast.promise(downloadInvoicePdf(order, store.name), {
+      loading: "Generating invoice...",
+      success: "Invoice downloaded",
+      error: "Failed to generate invoice",
+    });
+  }, [store]);
+
+  const handleClearArchive = useCallback(() => {
+    const ids = orders.filter((o) => ARCHIVED_STATUSES.includes(o.status)).map((o) => o.id);
+    deleteOrders(ids);
+  }, [orders, deleteOrders]);
 
   const createStore = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,13 +402,13 @@ const Dashboard = () => {
                         ))}
                       </div>
                     ) : (
-                      <OrdersTab orders={orders} filteredOrders={filteredOrders} orderFilter={orderFilter} setOrderFilter={setOrderFilter} orderSearch={orderSearch} setOrderSearch={setOrderSearch} onStatusChange={(orderId, status) => updateOrderStatus(orderId, status)} onCancelConfirm={(orderId, newStatus) => setCancelConfirm({ orderId, newStatus })} onArchive={(orderId) => updateOrderStatus(orderId, "archived")} onExportCSV={() => exportCSV(filteredOrders, storeTaxPercent, CSV_HEADERS, store?.name)} onCreateOrder={() => setShowManualOrder(true)} revenueLimitReached={!isPro && totalConfirmed >= FREE_CONFIRMED_LIMIT} isPro={isPro} />
+                      <OrdersTab orders={orders} filteredOrders={filteredOrders} orderFilter={orderFilter} setOrderFilter={setOrderFilter} orderSearch={orderSearch} setOrderSearch={setOrderSearch} onStatusChange={(orderId, status) => updateOrderStatus(orderId, status)} onCancelConfirm={(orderId, newStatus) => setCancelConfirm({ orderId, newStatus })} onArchive={(orderId) => updateOrderStatus(orderId, "archived")} onDownloadInvoice={handleDownloadInvoice} onExportCSV={() => exportCSV(filteredOrders, storeTaxPercent, CSV_HEADERS, store?.name)} onCreateOrder={() => setShowManualOrder(true)} revenueLimitReached={!isPro && totalConfirmed >= FREE_CONFIRMED_LIMIT} isPro={isPro} />
                     )}
                   </>
                 )}
 
                 {tab === "archive" && (
-                  <ArchiveTab archivedOrders={archivedOrders} archiveSearch={archiveSearch} setArchiveSearch={setArchiveSearch} />
+                  <ArchiveTab archivedOrders={archivedOrders} archiveSearch={archiveSearch} setArchiveSearch={setArchiveSearch} archiveCount={archivedOrderCount} onClearArchive={() => setClearArchiveConfirm(true)} onDelete={(orderId) => setArchiveDeleteId(orderId)} onDownloadInvoice={handleDownloadInvoice} />
                 )}
 
                 {tab === "promo" && (
@@ -478,6 +495,28 @@ const Dashboard = () => {
             confirmLabel={CONFIRM.YES_RETURN}
             onConfirm={() => { updateOrderStatus(cancelConfirm.orderId, cancelConfirm.newStatus); setCancelConfirm(null); }}
             onCancel={() => setCancelConfirm(null)}
+            variant="danger"
+          />
+        )}
+
+        {clearArchiveConfirm && (
+          <ConfirmModal
+            title={ARCHIVE_TAB.CLEAR_CONFIRM_TITLE}
+            message={ARCHIVE_TAB.CLEAR_CONFIRM_MSG}
+            confirmLabel={ARCHIVE_TAB.CLEAR_ALL}
+            onConfirm={() => { handleClearArchive(); setClearArchiveConfirm(false); }}
+            onCancel={() => setClearArchiveConfirm(false)}
+            variant="danger"
+          />
+        )}
+
+        {archiveDeleteId && (
+          <ConfirmModal
+            title={ARCHIVE_TAB.DELETE_CONFIRM_TITLE}
+            message={ARCHIVE_TAB.DELETE_CONFIRM_MSG}
+            confirmLabel={ACTIONS.DELETE}
+            onConfirm={() => { deleteOrders([archiveDeleteId]); setArchiveDeleteId(null); }}
+            onCancel={() => setArchiveDeleteId(null)}
             variant="danger"
           />
         )}

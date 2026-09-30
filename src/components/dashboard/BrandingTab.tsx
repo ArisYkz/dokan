@@ -599,6 +599,7 @@ const BrandingTab = ({
                   <input
                     value={brandForm.hero_title}
                     onChange={(e) => set("hero_title", e.target.value)}
+                    maxLength={60}
                     className={inputClass}
                     placeholder="Handmade Jewelry in Almaty"
                   />
@@ -607,6 +608,7 @@ const BrandingTab = ({
                   <input
                     value={brandForm.hero_subtitle}
                     onChange={(e) => set("hero_subtitle", e.target.value)}
+                    maxLength={140}
                     className={inputClass}
                     placeholder="Handcrafted goods"
                   />
