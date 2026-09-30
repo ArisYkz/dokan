@@ -129,10 +129,16 @@ export const buildInvoiceHtml = (
 export const downloadInvoicePdf = async (order: OrderRow, storeName: string): Promise<void> => {
   const images = await fetchPrimaryImages(order.order_items.map((i) => i.product_id));
 
+  // Offscreen positioning must live on a WRAPPER: html-to-image copies the
+  // capture node's computed style (incl. left: -10000px) onto its clone,
+  // which would push the content outside the SVG canvas → blank PDF.
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "position:fixed;left:-10000px;top:0;";
   const node = document.createElement("div");
-  node.style.cssText = `position:fixed;left:-10000px;top:0;width:${PAGE_W_PX}px;background:#fff;`;
+  node.style.cssText = `width:${PAGE_W_PX}px;background:#fff;`;
   node.innerHTML = buildInvoiceHtml(order, storeName, images);
-  document.body.appendChild(node);
+  wrapper.appendChild(node);
+  document.body.appendChild(wrapper);
 
   try {
     let dataUrl: string;
@@ -152,6 +158,6 @@ export const downloadInvoicePdf = async (order: OrderRow, storeName: string): Pr
     pdf.addImage(dataUrl, "PNG", 0, 0, A4_W_MM, hMm);
     pdf.save(`invoice-${order.public_order_id}.pdf`);
   } finally {
-    document.body.removeChild(node);
+    document.body.removeChild(wrapper);
   }
 };
