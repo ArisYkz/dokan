@@ -29,6 +29,27 @@ export const fetchPrimaryImages = async (
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+const STATUS_LABELS: Record<string, string> = {
+  new: "Pending Order", awaiting_verification: "Awaiting Verification",
+  paid_confirmed: "Payment Confirmed", payment_rejected: "Payment Not Received",
+  shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled",
+  confirmed: "Confirmed", returned: "Returned", refunded: "Refunded",
+};
+
+/** Teal by default; red for failed/cancelled, green for delivered. */
+const statusBadgeClass = (status: string): string => {
+  if (["cancelled", "payment_rejected", "refunded"].includes(status)) return "badge badge-red";
+  if (status === "delivered") return "badge badge-green";
+  return "badge badge-teal";
+};
+
+const paymentLabel = (method: string | null): string | null => {
+  if (!method) return null;
+  if (method === "cod") return "Cash On";
+  if (method === "contact_us") return "Contact Us";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+};
+
 /** Build the invoice markup. Pure function so it can be unit-tested. */
 export const buildInvoiceHtml = (
   order: OrderRow,
@@ -42,71 +63,75 @@ export const buildInvoiceHtml = (
         <td class="img-cell">${images[item.product_id || ""] ? `<img src="${images[item.product_id || ""]}" />` : ""}</td>
         <td>${esc(item.product_name)}</td>
         <td class="num">${item.quantity}</td>
-        <td class="num">${formatPrice(item.product_price)}</td>
         <td class="num">${formatPrice(item.product_price * item.quantity)}</td>
       </tr>`,
     )
     .join("");
 
-  const date = new Date(order.created_at).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-  });
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const date = fmtDate(order.created_at) + (fmtDate(new Date().toISOString()) === fmtDate(order.created_at) ? " (Today)" : "");
 
+  const status = STATUS_LABELS[order.status] || order.status;
+  const payment = paymentLabel(order.payment_method);
   const subtotal = order.subtotal || order.order_items.reduce((s, i) => s + i.product_price * i.quantity, 0);
 
   return `
     <div class="sheet">
-      <div class="head">
-        <div>
-          <h1>${esc(storeName)}</h1>
-          <p class="muted">INVOICE</p>
+      <div class="card">
+        <p class="oid">Order ID: #${esc(order.public_order_id)}</p>
+        <span class="${statusBadgeClass(order.status)}">${esc(status)}</span>
+        <p class="date">${esc(date)}</p>
+        <span class="total-pill">Total&nbsp;&nbsp;<b>${formatPrice(order.total_price)}</b></span>
+
+        <h2>Customer Information</h2>
+        <p class="row"><span class="lbl">Name:</span> ${esc(order.customer_name)}</p>
+        <p class="row"><span class="lbl">Phone:</span> ${esc(order.customer_phone)}</p>
+        ${order.customer_address ? `<p class="row"><span class="lbl">Address:</span> ${esc(order.customer_address)}</p>` : ""}
+
+        <h2>Order Information</h2>
+        <p class="row"><span class="lbl">Payment:</span> ${payment ? `<span class="badge badge-teal">${esc(payment)}</span>` : "—"}</p>
+        ${order.tax_amount > 0 ? `<p class="row"><span class="lbl">Delivery Charge:</span> ${formatPrice(order.tax_amount)}</p>` : ""}
+      </div>
+
+      <div class="card">
+        <h2>Order Items</h2>
+        <table>
+          <thead>
+            <tr>
+              <th class="img-cell"></th>
+              <th>Product</th>
+              <th class="num">Quantity</th>
+              <th class="num">Price</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+
+        <div class="totals">
+          <p><span>Subtotal</span><span class="num">${formatPrice(subtotal)}</span></p>
+          ${order.discount_amount > 0 ? `<p class="discount"><span>Discount${order.promo_code ? ` (${esc(order.promo_code)})` : ""}</span><span class="num">-${formatPrice(order.discount_amount)}</span></p>` : ""}
+          ${order.tax_amount > 0 ? `<p><span>Delivery Charge</span><span class="num">${formatPrice(order.tax_amount)}</span></p>` : ""}
+          <p class="grand"><span>Total</span><span class="num">${formatPrice(order.total_price)}</span></p>
         </div>
-        <div class="right">
-          <p class="mono">${esc(order.public_order_id)}</p>
-          <p class="muted">${date}</p>
-        </div>
       </div>
 
-      <div class="customer">
-        <p class="bold">${esc(order.customer_name)}</p>
-        <p>${esc(order.customer_phone)}${order.customer_address ? ` · ${esc(order.customer_address)}` : ""}</p>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th class="img-cell"></th>
-            <th>Item</th>
-            <th class="num">Qty</th>
-            <th class="num">Price</th>
-            <th class="num">Total</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-
-      <div class="totals">
-        <p><span>Subtotal</span><span class="num">${formatPrice(subtotal)}</span></p>
-        ${order.discount_amount > 0 ? `<p class="discount"><span>Discount${order.promo_code ? ` (${esc(order.promo_code)})` : ""}</span><span class="num">-${formatPrice(order.discount_amount)}</span></p>` : ""}
-        ${order.tax_amount > 0 ? `<p><span>Shipping</span><span class="num">${formatPrice(order.tax_amount)}</span></p>` : ""}
-        <p class="grand"><span>Total</span><span class="num">${formatPrice(order.total_price)}</span></p>
-      </div>
-
-      <p class="muted footnote">Thank you for your order.</p>
+      <p class="muted footnote">Thank you for shopping with ${esc(storeName)}.</p>
     </div>
     <style>
-      .sheet { width: ${PAGE_W_PX}px; background: #fff; color: #111; padding: 40px 48px; box-sizing: border-box; font-family: -apple-system, "Segoe UI", "Noto Sans Bengali", Roboto, Arial, sans-serif; }
-      .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 16px; }
-      .head h1 { margin: 0; font-size: 22px; font-weight: 700; }
-      .head .muted { margin: 2px 0 0; font-size: 11px; letter-spacing: 0.2em; color: #888; }
-      .head .right { text-align: right; }
-      .head .right p { margin: 0; font-size: 12px; }
-      .mono { font-family: ui-monospace, Menlo, monospace; }
-      .bold { font-weight: 600; }
-      .muted { color: #888; }
-      .right { text-align: right; }
-      .customer { margin: 16px 0 24px; }
-      .customer p { margin: 0; font-size: 13px; }
+      .sheet { width: ${PAGE_W_PX}px; background: #f1f5f9; color: #111; padding: 32px 40px; box-sizing: border-box; font-family: -apple-system, "Segoe UI", "Noto Sans Bengali", Roboto, Arial, sans-serif; }
+      .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; }
+      .oid { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+      .badge { display: inline-block; padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .badge-teal { background: #5eead4; color: #134e4a; }
+      .badge-red { background: #fecaca; color: #b91c1c; }
+      .badge-green { background: #a7f3d0; color: #065f46; }
+      .date { margin: 12px 0 16px; font-size: 14px; color: #64748b; }
+      .total-pill { display: inline-block; background: #f472b6; color: #fff; border-radius: 999px; padding: 10px 22px; font-size: 15px; margin-bottom: 24px; }
+      h2 { margin: 24px 0 10px; font-size: 16px; font-weight: 700; }
+      h2:first-of-type { margin-top: 0; }
+      .row { margin: 6px 0; font-size: 14px; }
+      .lbl { display: inline-block; width: 130px; color: #64748b; }
       table { width: 100%; border-collapse: collapse; font-size: 13px; }
       th { text-align: left; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; border-bottom: 1px solid #ddd; padding: 6px 8px; }
       td { padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
@@ -117,7 +142,8 @@ export const buildInvoiceHtml = (
       .totals p { display: flex; justify-content: space-between; margin: 4px 0; }
       .totals .discount { color: #b45309; }
       .totals .grand { border-top: 2px solid #111; margin-top: 8px; padding-top: 8px; font-weight: 700; font-size: 15px; }
-      .footnote { margin-top: 32px; font-size: 11px; text-align: center; }
+      .muted { color: #888; }
+      .footnote { margin-top: 8px; font-size: 11px; text-align: center; }
     </style>`;
 };
 

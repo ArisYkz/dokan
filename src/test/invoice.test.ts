@@ -28,7 +28,7 @@ const makeOrder = (overrides: Partial<OrderRow> = {}): OrderRow => ({
 });
 
 describe("buildInvoiceHtml", () => {
-  it("renders each item with name, qty, unit price and line total", () => {
+  it("renders each item with name, quantity and line total", () => {
     const html = buildInvoiceHtml(makeOrder(), "My Store", {});
     expect(html).toContain("Jamdani Saree");
     expect(html).toContain('>2</td>');
@@ -45,11 +45,11 @@ describe("buildInvoiceHtml", () => {
     expect(html).not.toContain("<img");
   });
 
-  it("shows subtotal, shipping and grand total; no discount line when none", () => {
+  it("shows subtotal, delivery charge and grand total; no discount line when none", () => {
     const html = buildInvoiceHtml(makeOrder(), "My Store", {});
     expect(html).toContain("Subtotal");
     expect(html).toContain("1,000 ৳");
-    expect(html).toContain("Shipping");
+    expect(html).toContain("Delivery Charge");
     expect(html).toContain("100 ৳");
     expect(html).toContain("1,100 ৳"); // grand total
     expect(html).not.toContain("Discount");
@@ -68,6 +68,28 @@ describe("buildInvoiceHtml", () => {
     const html = buildInvoiceHtml(order, "My Store", {});
     expect(html).toContain("&lt;b&gt;Saree&lt;/b&gt;");
     expect(html).not.toContain("<b>Saree</b>");
+  });
+
+  it("renders the human-readable status badge", () => {
+    const html = buildInvoiceHtml(makeOrder({ status: "paid_confirmed" }), "My Store", {});
+    expect(html).toContain("Payment Confirmed");
+    expect(html).toContain("badge-teal");
+  });
+
+  it("uses a red badge for cancelled orders", () => {
+    const html = buildInvoiceHtml(makeOrder({ status: "cancelled" }), "My Store", {});
+    expect(html).toContain("Cancelled");
+    expect(html).toContain("badge-red");
+  });
+
+  it("maps cod to a Cash On payment badge and omits the row for null", () => {
+    expect(buildInvoiceHtml(makeOrder({ payment_method: "cod" }), "My Store", {})).toContain("Cash On");
+    expect(buildInvoiceHtml(makeOrder({ payment_method: null }), "My Store", {})).not.toContain("Cash On");
+  });
+
+  it("marks today's date with (Today), but not past dates", () => {
+    expect(buildInvoiceHtml(makeOrder({ created_at: new Date().toISOString() }), "My Store", {})).toContain("(Today)");
+    expect(buildInvoiceHtml(makeOrder({ created_at: "2020-01-01T10:00:00Z" }), "My Store", {})).not.toContain("(Today)");
   });
 });
 
