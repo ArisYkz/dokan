@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Clock, Truck, Package, MessageCircle, Copy, Timer, RotateCcw, AlertTriangle, Star, Undo2 } from "lucide-react";
+import { Check, Clock, Truck, Package, MessageCircle, Copy, Timer, RotateCcw, AlertTriangle, Star, Undo2, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPrice, toWaMeDigits } from "@/lib/format";
@@ -9,7 +9,9 @@ import { useLabels } from "@/hooks/useLabels";
 import { useTranslation } from "react-i18next";
 import StarRating from "@/components/StarRating";
 import { normalizePaymentMethods, WALLET_KEYS, type WalletKey } from "@/constants/paymentMethods";
-import { NO_PAYMENT_METHODS } from "@/constants/business";
+import { NO_PAYMENT_METHODS, CONFIRMED_STATUSES } from "@/constants/business";
+import { downloadInvoicePdf } from "@/lib/invoice";
+import type { OrderRow } from "@/types/store";
 
 interface OrderData {
   id: string;
@@ -19,6 +21,8 @@ interface OrderData {
   customer_phone_hash: string;
   customer_address: string;
   total_price: number;
+  subtotal: number | null;
+  tax_amount: number | null;
   status: string;
   created_at: string;
   store_id: string;
@@ -292,6 +296,14 @@ const OrderTracking = () => {
   const hasQR = !!recipientQr;
   const hasPayment = !!(recipientPhone && (methodWallet || store?.payment_name));
   const isExpired = order.status === "new" && !isNoPay && remaining !== null && remaining <= 0;
+
+  const handleDownloadInvoice = () => {
+    toast.promise(downloadInvoicePdf(order as unknown as OrderRow, store.name), {
+      loading: "Generating invoice...",
+      success: "Invoice downloaded",
+      error: "Failed to generate invoice",
+    });
+  };
 
   // Expired state
   if (isExpired) {
@@ -579,6 +591,15 @@ const OrderTracking = () => {
               <p className="font-mono text-lg font-bold">{formatPrice(order.total_price)}</p>
             </div>
           </div>
+          {CONFIRMED_STATUSES.includes(order.status) && (
+            <button
+              onClick={handleDownloadInvoice}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-border text-sm tracking-wide uppercase rounded-none hover:bg-muted transition-colors font-mono"
+            >
+              <FileDown className="w-4 h-4" />
+              {TRACKING.DOWNLOAD_INVOICE}
+            </button>
+          )}
         </motion.div>
 
         {/* Contact Seller - Dynamic Platform */}
